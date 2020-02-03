@@ -248,6 +248,10 @@ struct AgoConfigArray {
 	vx_size capacity;
 	vx_size itemsize;
 };
+struct AgoConfigObjectArray {
+	vx_enum itemtype;
+	vx_size numitems;
+};
 struct AgoConfigConvolution {
 	vx_size rows;
 	vx_size columns;
@@ -724,6 +728,7 @@ struct _vx_pyramid { AgoData d; };
 struct _vx_remap { AgoData d; };
 struct _vx_scalar { AgoData d; };
 struct _vx_threshold { AgoData d; };
+struct _vx_object_array { AgoData d; };
 
 // framework
 void * agoAllocMemory(vx_size size);

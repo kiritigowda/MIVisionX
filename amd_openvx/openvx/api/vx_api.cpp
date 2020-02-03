@@ -6734,6 +6734,173 @@ VX_API_ENTRY vx_status VX_API_CALL vxUnmapArrayRange(vx_array array, vx_map_id m
 }
 
 /*==============================================================================
+OBJECTARRAY
+=============================================================================*/
+
+/*!
+* \brief Creates a reference to an ObjectArray object.
+*
+* User must specify the ObjectArray count (i.e., the number of objects to create in the ObjectArray).
+*
+* \param [in] context      The reference to the overall Context.
+* \param [in] exemplar     The exemplar object that defines the metadata of the created objects in the ObjectArray.
+* \param [in] count        The number of Objects to create in the ObjectArray. This value must be greater than zero
+*
+* \return <tt>\ref vx_object_array</tt>.
+* \retval 0 No Array was created.
+* \retval * An Array was created.
+*
+* \ingroup group_object_array
+*
+*/
+VX_API_ENTRY vx_object_array VX_API_CALL vxCreateObjectArray(vx_context context, vx_reference exemplar, vx_size count)
+{
+	AgoData * data = NULL;
+	if (agoIsValidContext(context) && agoIsValidReference(exemplar) && count > 0) {
+		CAgoLock lock(context->cs);
+		char desc[512]; sprintf(desc, "object-array:," VX_FMT_SIZE "", count);
+		data = agoCreateDataFromDescription(context, NULL, desc, true);
+		if (data) {
+			agoGenerateDataName(context, "object-array", data->name);
+			agoAddData(&context->dataList, data);
+		}
+	}
+	return (vx_object_array)data;
+}
+
+/*!
+* \brief Creates an opaque reference to a virtual ObjectArray with no direct user access.
+*
+* This function creates an ObjectArray of count objects with similar behavior as vxCreateObjectArray. 
+* The only difference is that the objects that are created are virtual in the given graph.
+*
+* \param [in] graph        Reference to the graph where to create the virtual ObjectArray.
+* \param [in] exemplar     The exemplar object that defines the type of object in the ObjectArray.
+*                          Only exemplar type of vx_image, vx_array and vx_pyramid are allowed. 
+* \param [in] count        Number of Objects to create in the ObjectArray.
+*
+* \return <tt>\ref vx_object_array</tt>.
+* \retval 0 No ObjectArray was created.
+* \retval * An ObjectArray was created or an error occurred. Use <tt>\ref vxGetStatus</tt> to determine.
+*
+* \ingroup group_object_array
+*
+*/
+VX_API_ENTRY vx_object_array VX_API_CALL vxCreateVirtualObjectArray(vx_graph graph, vx_reference exemplar, vx_size count)
+{
+	AgoData * data = NULL;
+	if (agoIsValidGraph(graph)) {
+		CAgoLock lock(graph->cs);
+
+		if (agoIsValidReference(exemplar)) {
+			if (exemplar->type == VX_TYPE_IMAGE || exemplar->type == VX_TYPE_ARRAY || exemplar->type == VX_TYPE_PYRAMID) {
+				char desc[512]; 
+				sprintf(desc, "object-array-virtual:0," VX_FMT_SIZE "", count);
+				data = agoCreateDataFromDescription(graph->ref.context, graph, desc, true);
+				if (data) {
+					agoGenerateVirtualDataName(graph, "object-array", data->name);
+					agoAddData(&graph->dataList, data);
+				}
+			}
+		}
+	}
+	return (vx_object_array)data;
+}
+
+/*!
+* \brief Queries an attribute from the ObjectArray.
+*
+* \param [in] arr          The reference to the ObjectArray.
+* \param [in] attribute    The attribute to query. Use a <tt>\ref  vx_object_array_attribute_e</tt>.
+* \param [out] ptr         The location at which to store the resulting value.
+* \param [in] size         The size of the container to which \a ptr points.
+*
+* \return A <tt>\ref vx_status_e</tt> enumeration.
+* \retval VX_SUCCESS                   No errors; any other value indicates failure.
+* \retval VX_ERROR_INVALID_REFERENCE   \a arr is not a valid <tt>\ref vx_object_array</tt> reference.
+* \retval VX_ERROR_NOT_SUPPORTED       If the \a attribute is not a value supported on this implementation.
+* \retval VX_ERROR_INVALID_PARAMETERS  If any of the other parameters are incorrect.
+*
+* \ingroup group_object_array
+*
+*/
+VX_API_ENTRY vx_status VX_API_CALL vxQueryObjectArray(vx_object_array arr, vx_enum attribute, void *ptr, vx_size size)
+{
+	vx_status status = VX_ERROR_INVALID_REFERENCE;
+	AgoData * data = (AgoData *)arr;
+	if (agoIsValidData(data, VX_TYPE_ARRAY)) {
+		status = VX_ERROR_INVALID_PARAMETERS;
+		if (ptr) {
+			switch (attribute)
+			{
+			case VX_OBJECT_ARRAY_ATTRIBUTE_ITEMTYPE:
+				if (size == sizeof(vx_enum)) {
+					*(vx_enum *)ptr = data->u.arr.itemtype;
+					status = VX_SUCCESS;
+				}
+				break;
+			case VX_OBJECT_ARRAY_ATTRIBUTE_NUMITEMS:
+				if (size == sizeof(vx_size)) {
+					*(vx_size *)ptr = data->u.arr.numitems;
+					status = VX_SUCCESS;
+				}
+				break;
+			default:
+				status = VX_ERROR_NOT_SUPPORTED;
+				break;
+			}
+		}
+	}
+	return status;
+}
+
+/*! \brief Retrieves the reference to the OpenVX Object in location index of the ObjectArray.
+* \param [in] arr The ObjectArray.
+* \param [in] index The index of the object in the ObjectArray.
+* \return   A <tt>\ref vx_reference</tt> to an OpenVX data object.
+* \note This is a <tt>\refvx_reference</tt>, which can be used elsewhere in OpenVX. 
+* A call to vxRelease<Object> or vxReleaseReference is necessary to release the Object for each call to this function.
+*
+* \ingroup group_object_array
+*
+*/
+VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, vx_uint32 index)
+{
+	AgoData * data = (AgoData *)arr;
+	AgoData * item = NULL;
+	if (agoIsValidData(data, VX_TYPE_OBJECT_ARRAY)) {
+		if (index < data->u.arr.numitems) {
+			item = data->children[index];
+		}
+	}
+	return (vx_reference)item;
+}
+
+/*!
+* \brief Releases a reference of an ObjectArray object.
+* The object may not be garbage collected until its total reference and its contained objects count is zero.
+* After returning from this function the reference is zeroed/cleared.
+* \param [in] arr          The pointer to the ObjectArray to release.
+* \return A <tt>\ref vx_status_e</tt> enumeration.
+* \retval VX_SUCCESS No errors; any other value indicates failure 
+* \retval VX_ERROR_INVALID_REFERENCE If arr is not a <tt>\ref vx_object_array</tt>.
+*
+* \ingroup group_object_array
+*
+*/
+VX_API_ENTRY vx_status VX_API_CALL vxReleaseObjectArray(vx_object_array *arr)
+{
+	vx_status status = VX_ERROR_INVALID_REFERENCE;
+	if (arr && agoIsValidData((AgoData*)*arr, VX_TYPE_OBJECT_ARRAY)) {
+		if (!agoReleaseData((AgoData*)*arr, true)) {
+			*arr = NULL;
+			status = VX_SUCCESS;
+		}
+	}
+	return status;
+}
+
+/*==============================================================================
 META FORMAT
 =============================================================================*/
 
