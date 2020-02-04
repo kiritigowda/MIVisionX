@@ -381,6 +381,7 @@ struct AgoData {
 	union {
 		AgoConfigDelay delay;
 		AgoConfigArray arr;
+		AgoConfigObjectArray objarr;
 		AgoConfigConvolution conv;
 		AgoConfigDistribution dist;
 		AgoConfigImage img;
