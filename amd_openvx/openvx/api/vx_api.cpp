@@ -6158,6 +6158,344 @@ VX_API_ENTRY vx_remap VX_API_CALL vxCreateRemap(vx_context context,
 	return (vx_remap)data;
 }
 
+/*! \brief Creates an opaque reference to a remap table object without direct user access.
+ * \param [in] graph 		The reference to the parent graph.
+ * \param [in] src_width 	Width of the source image in pixel.
+ * \param [in] src_height 	Height of the source image in pixels.
+ * \param [in] dst_width 	Width of the destination image in pixels.
+ * \param [in] dst_height 	Height of the destination image in pixels.
+ * \see <tt>\ref vxCreateRemap</tt>
+ * \ingroup group_remap
+ * \returns A remap reference <tt>\ref vx_remap</tt>. Any possible errors preventing a
+ * successful creation should be checked using <tt>\ref vxGetStatus</tt>.
+ */
+VX_API_ENTRY vx_remap VX_API_CALL vxCreateVirtualRemap(vx_graph graph,
+                              vx_uint32 src_width,
+                              vx_uint32 src_height,
+                              vx_uint32 dst_width,
+                              vx_uint32 dst_height)
+{
+	AgoData * data = NULL;
+	if (agoIsValidGraph(graph) && src_width > 0 && src_height > 0 && dst_width > 0 && dst_height > 0) {
+		CAgoLock lock(graph->cs);
+		char desc[512]; 
+		sprintf(desc, "remap-virtual:%u,%u,%u,%u", src_width, src_height, dst_width, dst_height);
+		data = agoCreateDataFromDescription(graph->ref.context, graph, desc, true);
+		if (data) {
+			agoGenerateVirtualDataName(graph, "remap", data->name);
+			agoAddData(&graph->dataList, data);
+		}
+	}
+	return (vx_remap)data;
+}
+
+/*! \brief Allows the application to copy a rectangular patch from/into a remap object.
+ *
+ * The patch is specified within the destination dimensions and its
+ * data provide the corresponding coordinate within the source dimensions.
+ * The patch in user memory is a 2D array of elements of the type associated with the
+ * \p coordinate_type parameter (i.e., <tt>\ref vx_coordinates2df_t</tt> for
+ * <tt>\ref VX_TYPE_COORDINATES2DF</tt>).
+ * The memory layout of this array follows a row-major order where rows are
+ * compact (without any gap between elements), and where the potential padding
+ * after each line is determined by the \p user_stride_y parameter.
+
+ * \param [in] remap The reference to the remap object that is the source or the
+ * destination of the patch copy.
+ *
+ * \param [in] rect The coordinates of remap patch. The patch must be specified
+ * within the bounds of the remap destination dimensions
+ * (<tt>\ref VX_REMAP_DESTINATION_WIDTH</tt> x <tt>\ref VX_REMAP_DESTINATION_HEIGHT</tt>).
+ * (start_x, start_y) gives the coordinate of the topleft element inside the patch,
+ * while (end_x, end_y) gives the coordinate of the bottomright element out of the patch.
+ *
+ * \param [in] user_stride_y The difference between the address of the first element
+ * of two successive lines of the remap patch in user memory (pointed by
+ * \p user_ptr). The layout of the user memory must follow a row major order and user_stride_y
+ * must follow the following rule :
+ *  user_stride_y >= sizeof(<ELEMENT_TYPE>) * (rect->end_x - rect->start_x).
+ *
+ * \param [in] user_ptr The address of the user memory location where to store the requested
+ * remap data if the copy was requested in read mode, or from where to get the remap data to
+ * store into the remap object if the copy was requested in write mode. \p user_ptr is the
+ * address of the the top-left element of the remap patch.
+ * The accessible user memory must be large enough to contain the specified patch with
+ * the specified layout:
+ * accessible memory in bytes >= (rect->end_y - rect->start_y) * user_stride_y.
+ *
+ * \param [in] user_coordinate_type This declares the type of the source coordinate remap
+ * data in the user memory. It must be <tt>\ref VX_TYPE_COORDINATES2DF</tt>.
+ *
+ * \param [in] usage This declares the effect of the copy with regard to the remap object
+ * using the <tt>\ref vx_accessor_e</tt> enumeration. Only VX_READ_ONLY and VX_WRITE_ONLY are
+ * supported:
+ * \arg <tt>\ref VX_READ_ONLY</tt> means that data is copied from the remap object into the user
+ * memory pointer by \p user_ptr. The potential padding after each line in user
+ * memory will stay unchanged.
+ * \arg <tt>\ref VX_WRITE_ONLY</tt> means that data is copied into the remap object from
+ * the user memory.
+ *
+ * \param [in] user_mem_type A <tt>\ref vx_memory_type_e</tt> enumeration that specifies
+ * the type of the memory pointer by \p user_ptr.
+ *
+ * \return A <tt>\ref vx_status_e</tt> enumeration.
+ * \retval VX_SUCCESS No errors; any other value indicates failure.
+ * \retval VX_ERROR_INVALID_REFERENCE remap is not a valid <tt>\ref vx_remap</tt> reference.
+ * \retval VX_ERROR_INVALID_PARAMETERS An other parameter is incorrect.
+ *
+ * \ingroup group_remap
+*/
+VX_API_ENTRY vx_status VX_API_CALL vxCopyRemapPatch(vx_remap remap,
+                                                    const vx_rectangle_t *rect,
+                                                    vx_size user_stride_y,
+                                                    void * user_ptr,
+                                                    vx_enum user_coordinate_type,
+                                                    vx_enum usage,
+                                                    vx_enum user_mem_type)
+{
+	AgoData * data = (AgoData *)remap;
+	vx_status status = VX_ERROR_INVALID_REFERENCE;
+	if (agoIsValidData(data, VX_TYPE_REMAP))
+	{
+		status = VX_ERROR_INVALID_PARAMETERS;
+		bool paramsValid = true;
+		if(rect->start_x > data->u.remap.src_width || rect->start_y > data->u.remap.src_height
+			|| rect->end_x > data->u.remap.dst_width || rect->end_y > data->u.remap.dst_height)
+			paramsValid = false;
+		if(user_coordinate_type != VX_TYPE_COORDINATES2DF)
+			paramsValid = false;
+		if(user_stride_y < sizeof(vx_coordinates2df_t)*(rect->end_x - rect->start_x))
+			paramsValid = false;
+
+		if(paramsValid && (user_mem_type == VX_MEMORY_TYPE_HOST) && user_ptr && (usage == VX_READ_ONLY || usage == VX_WRITE_ONLY)){
+			status = VX_ERROR_NO_MEMORY;
+			if (!data->buffer) {
+				CAgoLock lock(data->ref.context->cs);
+				if (agoAllocData(data)) {
+					return VX_FAILURE;
+				}
+			}
+			AgoData * dataToSync = data;
+#if ENABLE_OPENCL
+			if (dataToSync->opencl_buffer && !(dataToSync->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED)) {
+				// make sure dirty OpenCL buffers are synched before giving access for read
+				if (dataToSync->buffer_sync_flags & (AGO_BUFFER_SYNC_FLAG_DIRTY_BY_NODE_CL)) {
+					// transfer only valid data
+					if (dataToSync->size > 0) {
+						cl_int err = clEnqueueReadBuffer(dataToSync->ref.context->opencl_cmdq, dataToSync->opencl_buffer, CL_TRUE, dataToSync->opencl_buffer_offset, dataToSync->size, dataToSync->buffer, 0, NULL, NULL);
+						if (err) {
+							status = VX_FAILURE;
+							agoAddLogEntry(&dataToSync->ref, status, "ERROR: vxCopyRemapPatch: clEnqueueReadBuffer() => %d\n", err);
+							return status;
+						}
+					}
+					dataToSync->buffer_sync_flags |= AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED;
+				}
+			}
+#endif
+			if (usage == VX_READ_ONLY) {
+				for (vx_uint32 d2 = 0; d2 < (rect->end_x-rect->start_x); d2++) {
+					vx_size offset = data->u.remap.src_width + (d2*user_stride_y);
+					vx_size uoffset = *(vx_size *)user_ptr + (d2*user_stride_y);
+					memcpy(((vx_coordinates2df_t *)user_ptr) + uoffset, data->buffer + offset, user_stride_y);
+				}
+			}
+			else {
+				for (vx_uint32 d2 = 0; d2 < (rect->end_x-rect->start_x); d2++) {
+					vx_size offset = data->u.remap.src_width + (d2*user_stride_y);
+					vx_size uoffset = *(vx_size *)user_ptr + (d2*user_stride_y);
+					memcpy(data->buffer + offset, ((vx_coordinates2df_t *)user_ptr) + uoffset, user_stride_y);
+				}
+			}
+			// update sync flags
+			dataToSync->buffer_sync_flags &= ~AGO_BUFFER_SYNC_FLAG_DIRTY_MASK;
+			dataToSync->buffer_sync_flags |= AGO_BUFFER_SYNC_FLAG_DIRTY_BY_COMMIT;
+			status = VX_SUCCESS;
+		}	
+	}
+	return status;
+}
+
+/*! \brief Allows the application to get direct access to a rectangular patch of a remap object.
+ *
+ * The patch is specified within the destination dimensions and its
+ * data provide the corresponding coordinate within the source dimensions.
+ * The patch is mapped as a 2D array of elements of the type associated
+ * with the \p coordinate_type parameter (i.e., <tt>\ref vx_coordinates2df_t</tt>
+ * for <tt>\ref VX_TYPE_COORDINATES2DF</tt>).
+ * The memory layout of the mapped 2D array follows a row-major order where rows are
+ * compact (without any gap between elements), and where the potential
+ * padding after each lines is determined by (* \p stride_y).
+ *
+ * \param [in] remap The reference to the remap object that contains the
+ * patch to map.
+ *
+ * \param [in] rect The coordinates of remap patch. The patch must be specified
+ * within the bounds of the remap destination dimensions
+ * (<tt>\ref VX_REMAP_DESTINATION_WIDTH</tt> x <tt>\ref VX_REMAP_DESTINATION_HEIGHT</tt>).
+ * (start_x, start_y) gives the coordinate of the topleft element inside the patch,
+ * while (end_x, end_y) gives the coordinate of the bottomright element out of the patch.
+ *
+ * \param [out] map_id The address of a <tt>\ref vx_map_id</tt> variable
+ * where the function returns a map identifier.
+ * \arg (*map_id) must eventually be provided as the map_id parameter of a call
+ * to <tt>\ref vxUnmapRemapPatch</tt>.
+ *
+ * \param [out] stride_y The address of a vx_size variable where the function
+ * returns the difference between the address of the first element of two
+ * successive lines in the mapped remap patch. The stride value follows the
+ * following rule :
+ * (*stride_y) >= sizeof(<ELEMENT_TYPE>) * (rect->end_x - rect->start_x)
+ *
+ * \param [out] ptr The address of a pointer where the function returns where
+ * remap patch data can be accessed. (*ptr) is the address of the the top-left
+ * element of the remap patch.
+ * The returned (*ptr) address is only valid between the call to this function
+ * and the corresponding call to <tt>\ref vxUnmapRemapPatch</tt>.
+ *
+ * \param [in] coordinate_type This declares the type of the source coordinate
+ * data that the application wants to access in the remap patch.
+ * It must be <tt>\ref VX_TYPE_COORDINATES2DF</tt>.
+ *
+ * \param [in] usage This declares the access mode for the remap patch, using
+ * the <tt>\ref vx_accessor_e</tt> enumeration.
+ * \arg <tt>\ref VX_READ_ONLY</tt>: after the function call, the content of the
+ * memory location pointed by (*ptr) contains the remap patch data. Writing into
+ * this memory location is forbidden and its behavior is undefined.
+ * \arg <tt>\ref VX_READ_AND_WRITE</tt>: after the function call, the content of
+ * the memory location pointed by (*ptr) contains the remap patch data; writing
+ * into this memory is allowed for the location of elements only and will
+ * result in a modification of the written elements in the remap object once the
+ * patch is unmapped. Writing into a gap between element lines
+ * (when (*stride_y) > sizeof(<ELEMENT_TYPE>) * (rect->end_x - rect->start_x))
+ * is forbidden and its behavior is undefined.
+ * \arg <tt>\ref VX_WRITE_ONLY</tt>: after the function call, the memory location
+ * pointed by (*ptr) contains undefined data; writing each element of the patch is
+ * required prior to unmapping. Elements not written by the application before
+ * unmap will become undefined after unmap, even if they were well defined before
+ * map. Like for <tt>\ref VX_READ_AND_WRITE</tt>, writing into a gap between
+ * element lines is forbidden and its behavior is undefined.
+ *
+ * \param [in] mem_type A <tt>\ref vx_memory_type_e</tt> enumeration that
+ * specifies the type of the memory where the remap patch is requested to be mapped.
+ *
+ * \return A <tt>\ref vx_status_e</tt> enumeration.
+ * \retval VX_SUCCESS No errors; any other value indicates failure.
+ * \retval VX_ERROR_INVALID_REFERENCE remap is not a valid <tt>\ref vx_remap</tt> reference.
+ * \retval VX_ERROR_INVALID_PARAMETERS An other parameter is incorrect.
+ *
+ * \ingroup group_remap
+ * \post <tt>\ref vxUnmapRemapPatch </tt> with same (*map_id) value.
+ */
+VX_API_ENTRY vx_status VX_API_CALL vxMapRemapPatch(vx_remap remap,
+                                                   const vx_rectangle_t *rect,
+                                                   vx_map_id *map_id,
+                                                   vx_size *stride_y,
+                                                   void **ptr,
+                                                   vx_enum coordinate_type,
+                                                   vx_enum usage,
+                                                   vx_enum mem_type)
+{
+	AgoData * data = (AgoData *)remap;
+	vx_status status = VX_ERROR_INVALID_REFERENCE;
+	if (agoIsValidData(data, VX_TYPE_REMAP)) {
+		status = VX_ERROR_INVALID_PARAMETERS;
+		bool paramsValid = true;
+		if(rect->start_x > data->u.remap.src_width || rect->start_y > data->u.remap.src_height
+			|| rect->end_x > data->u.remap.dst_width || rect->end_y > data->u.remap.dst_height)
+			paramsValid = false;
+		if(coordinate_type != VX_TYPE_COORDINATES2DF)
+			paramsValid = false;
+		if(*stride_y < (vx_size)(sizeof(vx_coordinates2df_t)*(rect->end_x - rect->start_x)))
+			paramsValid = false;
+
+		if (paramsValid && ptr && stride_y && map_id) {
+			if (!data->buffer) {
+				CAgoLock lock(data->ref.context->cs);
+				if (agoAllocData(data)) {
+					return VX_FAILURE;
+				}
+			}
+						
+			vx_size offset = (data->u.remap.dst_width - data->u.remap.src_width) * (*stride_y);
+			vx_uint8 * ptr_returned = data->buffer + offset;
+
+			// save the pointer and usage for use in vxUnmapRemapPatch
+			status = VX_SUCCESS;
+			for (auto i = data->mapped.begin(); i != data->mapped.end(); i++) {
+				if (i->ptr == ptr_returned) {
+					// can't support vxMapRemapPatch() more than once with same pointer
+					// the application needs to call vxUnmapTensorPatch() before calling vxMapRemapPatch()
+					status = VX_FAILURE;
+				}
+			}
+			if (status == VX_SUCCESS) {
+				AgoData * dataToSync = data;
+#if ENABLE_OPENCL
+				if (dataToSync->opencl_buffer && !(dataToSync->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED)) {
+					// make sure dirty OpenCL buffers are synched before giving access for read
+					if (dataToSync->buffer_sync_flags & (AGO_BUFFER_SYNC_FLAG_DIRTY_BY_NODE_CL)) {
+						// transfer only valid data
+						if (dataToSync->size > 0) {
+							cl_int err = clEnqueueReadBuffer(dataToSync->ref.context->opencl_cmdq, dataToSync->opencl_buffer, CL_TRUE, dataToSync->opencl_buffer_offset, dataToSync->size, dataToSync->buffer, 0, NULL, NULL);
+							if (err) {
+								status = VX_FAILURE;
+								agoAddLogEntry(&dataToSync->ref, status, "ERROR: vxMapRemapPatch: clEnqueueReadBuffer() => %d\n", err);
+								return status;
+							}
+						}
+						dataToSync->buffer_sync_flags |= AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED;
+					}
+				}
+#endif
+				MappedData item = { data->nextMapId++, ptr_returned, usage, false };
+				data->mapped.push_back(item);
+				*map_id = item.map_id;
+				*ptr = ptr_returned;
+			}
+		}
+	}
+	return status;
+}
+
+/*! \brief Unmap and commit potential changes to a remap object patch that was previously mapped.
+ *
+ * Unmapping a remap patch invalidates the memory location from which the patch could
+ * be accessed by the application. Accessing this memory location after the unmap function
+ * completes has an undefined behavior.
+ * \param [in] remap The reference to the remap object to unmap.
+ * \param [out] map_id The unique map identifier that was returned by <tt>\ref vxMapRemapPatch</tt> .
+ * \return A <tt>\ref vx_status_e</tt> enumeration.
+ * \retval VX_SUCCESS No errors; any other value indicates failure.
+ * \retval VX_ERROR_INVALID_REFERENCE remap is not a valid <tt>\ref vx_remap</tt> reference.
+ * \retval VX_ERROR_INVALID_PARAMETERS An other parameter is incorrect.
+ * \ingroup group_remap
+ * \pre <tt>\ref vxMapRemapPatch</tt> with same map_id value
+*/
+VX_API_ENTRY vx_status VX_API_CALL vxUnmapRemapPatch(vx_remap remap, vx_map_id map_id)
+{
+	AgoData * data = (AgoData *)remap;
+	vx_status status = VX_ERROR_INVALID_REFERENCE;
+	if (agoIsValidData(data, VX_TYPE_REMAP)) {
+		status = VX_ERROR_INVALID_PARAMETERS;
+		for (auto i = data->mapped.begin(); i != data->mapped.end(); i++) {
+			if (i->map_id == map_id) {
+				vx_enum usage = i->usage;
+				data->mapped.erase(i);
+				if (usage == VX_WRITE_ONLY || usage == VX_READ_AND_WRITE) {
+					// update sync flags
+					AgoData * dataToSync = data;
+					dataToSync->buffer_sync_flags &= ~AGO_BUFFER_SYNC_FLAG_DIRTY_MASK;
+					dataToSync->buffer_sync_flags |= AGO_BUFFER_SYNC_FLAG_DIRTY_BY_COMMIT;
+				}
+				status = VX_SUCCESS;
+				break;
+			}
+		}
+	}
+	return status;
+}
+
 /*! \brief Releases a reference to a remap table object. The object may not be
 * garbage collected until its total reference count is zero.
 * \param [in] table The pointer to the remap table to release.
