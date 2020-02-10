@@ -5731,6 +5731,90 @@ VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPattern(vx_context context,
 	return mat;
 }
 
+/*! \brief Creates a reference to a matrix object from a boolean pattern, with a user-specified origin.
+ *
+ * The matrix created by this function is of type <tt>\ref VX_TYPE_UINT8</tt>, with the value 0 representing False,
+ * and the value 255 representing True. It supports the patterns as described below:
+ * - VX_PATTERN_BOX is a matrix with dimensions equal to the given number of rows and columns, and all cells equal to 255.
+ *   Dimensions of 3x3 and 5x5 must be supported.
+ * - VX_PATTERN_CROSS is a matrix with dimensions equal to the given number of rows and columns, which both must be odd numbers.
+ *   All cells in the center row and center column are equal to 255, and the rest are equal to zero.
+ *   Dimensions of 3x3 and 5x5 must be supported.
+ * - VX_PATTERN_DISK is a matrix with dimensions equal to the given number of rows (R) and columns (C),
+ *   where R and C are odd and cell (c, r) is 255 if: \n
+ *   (r-R/2 + 0.5)^2 / (R/2)^2 + (c-C/2 + 0.5)^2/(C/2)^2 is less than or equal to 1,\n and 0 otherwise.
+ *
+ * A matrix created from pattern is read-only. The behavior when attempting to modify such a matrix is undefined.
+ *
+ * \param [in] context The reference to the overall context.
+ * \param [in] pattern The pattern of the matrix. See <tt>\ref VX_MATRIX_PATTERN</tt>.
+ * \param [in] columns The first dimensionality.
+ * \param [in] rows The second dimensionality.
+ * \param [in] origin_col The origin (first dimensionality).
+ * \param [in] origin_row The origin (second dimensionality).
+ * \returns A matrix reference <tt>\ref vx_matrix</tt> of type <tt>\ref VX_TYPE_UINT8</tt>. Any possible errors
+ * preventing a successful creation should be checked using <tt>\ref vxGetStatus</tt>.
+ * \ingroup group_matrix
+ */
+VX_API_ENTRY vx_matrix VX_API_CALL vxCreateMatrixFromPatternAndOrigin(vx_context context, vx_enum pattern, vx_size columns, vx_size rows, vx_size origin_col, vx_size origin_row)
+{
+	vx_matrix mat = nullptr;
+	// check for supported patterns
+	if (pattern == VX_PATTERN_BOX || pattern == VX_PATTERN_CROSS || pattern == VX_PATTERN_DISK || pattern == VX_PATTERN_OTHER)
+	{
+		// create a matrix object
+		mat = vxCreateMatrix(context, VX_TYPE_UINT8, columns, rows);
+		vx_status status = vxGetStatus((vx_reference)mat);
+		if (status == VX_SUCCESS) {
+			// initialize with the pattern and mark it
+			AgoData * data = (AgoData *)mat;
+			data->u.mat.pattern = pattern;
+			data->u.mat.origin.x = (vx_uint32)origin_col;
+			data->u.mat.origin.y = (vx_uint32)origin_row;
+			if (pattern != VX_PATTERN_OTHER) {
+				vx_uint8 * buf = new vx_uint8[columns * rows];
+				if (!buf) {
+					vxReleaseMatrix(&mat);
+					return mat;
+				}
+				if (pattern == VX_PATTERN_CROSS) {
+					// cross pattern
+					memset(buf, 0, columns * rows);
+					for (vx_size x = 0; x < columns; x++)
+						buf[columns * (rows / 2) + x] = 255;
+					for (vx_size y = 0; y < rows; y++)
+						buf[(columns / 2) + y * columns] = 255;
+				}
+				else if (pattern == VX_PATTERN_DISK) {
+					// disk pattern
+					for (vx_size r = 0; r < rows; r++) {
+						float y = ((r - rows*0.5f + 0.5f) / (rows*0.5f));
+						float y2 = y * y;
+						for (vx_size c = 0; c < columns; c++) {
+							float x = ((c - columns*0.5f + 0.5f) / (columns*0.5f));
+							float x2 = x * x;
+							buf[c + r * columns] = ((x2 + y2) <= 1.0f) ? 255 : 0;
+						}
+					}
+				}
+				else {
+					// box pattern
+					memset(buf, 255, columns * rows);
+				}
+				status = vxCopyMatrix(mat, buf, VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+				if (status) {
+					vxReleaseMatrix(&mat);
+					return mat;
+				}
+				delete[] buf;
+			}
+			// mark the matrix read-only
+			data->ref.read_only = true;
+		}
+	}
+	return mat;
+}
+
 /*==============================================================================
 CONVOLUTION
 =============================================================================*/
