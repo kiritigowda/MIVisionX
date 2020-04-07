@@ -740,7 +740,7 @@ int HafCpu_LaplacianPyramid_DATA_DATA_DATA
     vxSetContextAttribute(context, VX_CONTEXT_IMMEDIATE_BORDER, &border, sizeof(border));
 
     gaussian = vxCreatePyramid(context, levels + 1, VX_SCALE_PYRAMID_HALF, width, height, VX_DF_IMAGE_U8);
-    vxuGaussianPyramid(context, input, gaussian);
+    status |= vxuGaussianPyramid(context, input, gaussian);
 
     conv = vxCreateGaussian5x5Convolution(context);
 
