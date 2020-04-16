@@ -22,8 +22,6 @@ THE SOFTWARE.
 
 
 #include "ago_internal.h"
-#include <bitset>
-#include<iostream>
 
 int HafCpu_Add_U8_U8U8_Wrap
 	(
@@ -4099,7 +4097,6 @@ int HafCpu_Threshold_U8_S16_Binary
 	}
 	
 	/*Fix SSE Code
-	
 	bool useAligned = ((((intptr_t)pSrcImage | (intptr_t)pDstImage) & 0xF) == 0) ? true : false;
 
 	__m128i *pLocalSrc_xmm, *pLocalDst_xmm;
@@ -4190,7 +4187,6 @@ int HafCpu_Threshold_U8_S16_Range
 	}
 
 	/*Fix SSE Code
-	
 	bool useAligned = ((((intptr_t)pSrcImage | (intptr_t)pDstImage) & 0xF) == 0) ? true : false;
 
 	__m128i *pLocalSrc_xmm, *pLocalDst_xmm;
@@ -6770,7 +6766,6 @@ int HafCpu_MeanStdDev_DATA_U8
 		prefixWidth = 0;
 		alignedWidth = 0;
 	}
-
 	unsigned int prefixSum = 0, postfixSum = 0;
 	unsigned long long prefixSumSquared = 0, postfixSumSquared = 0;
 	
@@ -6834,7 +6829,6 @@ int HafCpu_MeanStdDev_DATA_U8
 
 		for (int x = 0; x < postfixWidth; x++, pLocalSrc++)
 		{
-			//printf("(uint32_t)*pLocalSrc = %u\n", (uint8_t)*pLocalSrc);
 			postfixSum += (uint8_t)*pLocalSrc;
 			postfixSumSquared += (unsigned long long)*pLocalSrc * (unsigned long long)*pLocalSrc;
 		}
