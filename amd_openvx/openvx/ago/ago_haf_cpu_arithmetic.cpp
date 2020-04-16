@@ -6760,14 +6760,14 @@ int HafCpu_MeanStdDev_DATA_U8
 	__m128i zeromask = _mm_setzero_si128();
 	__m128i sum = _mm_setzero_si128();
 	__m128i sum_squared = _mm_setzero_si128();
-	
+
 	int prefixWidth = intptr_t(pSrcImage) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
 	int postfixWidth = ((int)srcWidth - prefixWidth) & 15;
 	int alignedWidth = (int)srcWidth - prefixWidth - postfixWidth;
 	unsigned int prefixSum = 0, postfixSum = 0;
 	unsigned long long prefixSumSquared = 0, postfixSumSquared = 0;
-	printf("pre, post, align = %d %d %d\n", prefixWidth, postfixWidth, alignedWidth);
+	//printf("pre, post, align = %d %d %d\n", prefixWidth, postfixWidth, alignedWidth);
 	
 	int height = (int) srcHeight;
 	while (height)
