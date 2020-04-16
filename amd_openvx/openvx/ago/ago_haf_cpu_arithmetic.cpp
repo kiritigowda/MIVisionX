@@ -6768,7 +6768,7 @@ int HafCpu_MeanStdDev_DATA_U8
 	}
 	unsigned int prefixSum = 0, postfixSum = 0;
 	unsigned long long prefixSumSquared = 0, postfixSumSquared = 0;
-	
+
 	int height = (int) srcHeight;
 	while (height)
 	{
@@ -6836,7 +6836,7 @@ int HafCpu_MeanStdDev_DATA_U8
 		pSrcImage += srcImageStrideInBytes;
 		height--;
 	}
-	
+
 	sum = _mm_hadd_epi32(sum, sum);											// Lowest int of sum has sum of last two ints of sum
 	sum = _mm_hadd_epi32(sum, sum);											// Lowest int of sum has the sum of all four ints
 	pixels = _mm_srli_si128(sum_squared, 8);
