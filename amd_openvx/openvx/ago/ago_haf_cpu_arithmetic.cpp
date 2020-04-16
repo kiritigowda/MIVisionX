@@ -6829,7 +6829,7 @@ int HafCpu_MeanStdDev_DATA_U8
 
 		for (int x = 0; x < postfixWidth; x++, pLocalSrc++)
 		{
-			postfixSum += (uint8_t)*pLocalSrc;
+			postfixSum += (unsigned int)*pLocalSrc;
 			postfixSumSquared += (unsigned long long)*pLocalSrc * (unsigned long long)*pLocalSrc;
 		}
 
