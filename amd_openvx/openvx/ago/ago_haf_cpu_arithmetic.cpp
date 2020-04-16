@@ -6765,9 +6765,14 @@ int HafCpu_MeanStdDev_DATA_U8
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
 	int postfixWidth = ((int)srcWidth - prefixWidth) & 15;
 	int alignedWidth = (int)srcWidth - prefixWidth - postfixWidth;
+	if(alignedWidth < 0) {
+		postfixWidth = prefixWidth + postfixWidth + alignedWidth;
+		prefixWidth = 0;
+		alignedWidth = 0;
+	}
+
 	unsigned int prefixSum = 0, postfixSum = 0;
 	unsigned long long prefixSumSquared = 0, postfixSumSquared = 0;
-	//printf("pre, post, align = %d %d %d\n", prefixWidth, postfixWidth, alignedWidth);
 	
 	int height = (int) srcHeight;
 	while (height)

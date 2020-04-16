@@ -18272,7 +18272,6 @@ int agoKernel_MeanStdDev_DATA_U8(AgoNode * node, AgoKernelCommand cmd)
 		status = VX_SUCCESS;
 		AgoData * oData = node->paramList[0];
 		AgoData * iImg = node->paramList[1];
-		//printf("iImg->u.img.rect_valid.end_x - iImg->u.img.rect_valid.start_x, iImg->u.img.rect_valid.end_y - iImg->u.img.rect_valid.start_y, %u,%u,%u,%u, %u\n", iImg->u.img.rect_valid.end_x , iImg->u.img.rect_valid.start_x, iImg->u.img.rect_valid.end_y , iImg->u.img.rect_valid.start_y, iImg->u.img.stride_in_bytes);
 		if (HafCpu_MeanStdDev_DATA_U8(&((ago_meanstddev_data_t *)oData->buffer)->sum, &((ago_meanstddev_data_t *)oData->buffer)->sumSquared, 
 			iImg->u.img.rect_valid.end_x - iImg->u.img.rect_valid.start_x, iImg->u.img.rect_valid.end_y - iImg->u.img.rect_valid.start_y,
 			iImg->buffer + (iImg->u.img.rect_valid.start_y*iImg->u.img.stride_in_bytes) + iImg->u.img.rect_valid.start_x, iImg->u.img.stride_in_bytes)) {
