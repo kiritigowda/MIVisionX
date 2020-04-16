@@ -4180,7 +4180,7 @@ int HafCpu_Threshold_U8_S16_Range
 		vx_int16      upper
 	)
 {
-	/*for (int height = 0; height < (int)dstHeight; height++)
+	for (int height = 0; height < (int)dstHeight; height++)
 	{
 		for (int width = 0; width < (int)dstWidth; width++)
 		{
@@ -4189,8 +4189,8 @@ int HafCpu_Threshold_U8_S16_Range
 		}
 	}
 
-	Fix SSE Code
-	*/
+	/*Fix SSE Code
+	
 	bool useAligned = ((((intptr_t)pSrcImage | (intptr_t)pDstImage) & 0xF) == 0) ? true : false;
 
 	__m128i *pLocalSrc_xmm, *pLocalDst_xmm;
@@ -4262,7 +4262,7 @@ int HafCpu_Threshold_U8_S16_Range
 			pSrcImage += srcImageStrideInBytes;
 			pDstImage += dstImageStrideInBytes;
 		}
-	}
+	}*/
 	return AGO_SUCCESS;
 }
 
