@@ -592,7 +592,7 @@ int agoShutdownNode(AgoNode * node)
 			}
 			else if (kernel->deinitialize_f) {
 				if ((kernel->user_kernel == vx_true_e) && (node->local_data_set_by_implementation == vx_false_e))
-            		node->local_data_change_is_enabled = vx_true_e;
+					node->local_data_change_is_enabled = vx_true_e;
 				status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
 				node->local_data_change_is_enabled = vx_false_e;
 			}
