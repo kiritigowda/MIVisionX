@@ -1322,6 +1322,7 @@ vx_status agoVerifyNode(AgoNode * node)
 					}
 					// make sure that the data come from output validator matches with object
 					if (data->u.img.format != meta->data.u.img.format) {
+						printf("%u %u\n",data->u.img.format, meta->data.u.img.format);
 						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_FORMAT, "ERROR: agoVerifyGraph: kernel %s: invalid format for argument#%d\n", kernel->name, arg);
 						return VX_ERROR_INVALID_FORMAT;
 					}
@@ -1515,6 +1516,12 @@ vx_status agoVerifyNode(AgoNode * node)
 				}
 				else if (meta->data.ref.type == VX_TYPE_DISTRIBUTION) {
 					// nothing to do
+				}
+				else if (meta->data.ref.type == VX_TYPE_THRESHOLD) {
+					if ((data->u.thr.thresh_type != meta->data.u.thr.thresh_type)) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_TYPE, "ERROR: agoVerifyGraph: kernel %s: invalid threshold meta for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_TYPE;
+					}
 				}
 				else if (meta->data.ref.type == VX_TYPE_LUT) {
 					// nothing to do
@@ -1788,9 +1795,10 @@ int agoInitializeGraph(AgoGraph * graph)
 			status = kernel->func(node, ago_kernel_cmd_initialize);
 		}
 		else if (kernel->initialize_f) {
-			//node->local_data_change_is_enabled = vx_true_e;
+			if((kernel->user_kernel == vx_true_e) && (kernel->localDataSize == 0))
+				node->local_data_change_is_enabled = vx_true_e;
 			status = kernel->initialize_f(node, (vx_reference *)node->paramList, node->paramCount);
-			//node->local_data_change_is_enabled = vx_false_e;
+			node->local_data_change_is_enabled = vx_false_e;
 		}
 		if (status) {
 			return status;
@@ -1804,9 +1812,9 @@ int agoInitializeGraph(AgoGraph * graph)
 					return VX_ERROR_NO_MEMORY;
 				}
 				memset(node->localDataPtr, 0, node->localDataSize);
-				//node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
+			node->local_data_set_by_implementation = vx_true_e;
 			// keep a copy of paramList into paramListForAgeDelay
 			// TBD: needs to handle reverification path
 			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));
