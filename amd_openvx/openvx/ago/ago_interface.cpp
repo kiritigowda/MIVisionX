@@ -1812,6 +1812,7 @@ int agoInitializeGraph(AgoGraph * graph)
 					return VX_ERROR_NO_MEMORY;
 				}
 				memset(node->localDataPtr, 0, node->localDataSize);
+				//node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
 			node->local_data_set_by_implementation = vx_true_e;
