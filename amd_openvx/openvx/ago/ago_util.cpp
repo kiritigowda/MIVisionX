@@ -591,15 +591,15 @@ int agoShutdownNode(AgoNode * node)
 				status = kernel->func(node, ago_kernel_cmd_shutdown);
 			}
 			else if (kernel->deinitialize_f) {
-				if ((kernel->user_kernel == vx_true_e) && (node->local_data_set_by_implementation == vx_false_e))
+				if ((kernel->user_kernel == vx_true_e) && (node->local_data_set_by_implementation == vx_false_e)) {
 					node->local_data_change_is_enabled = vx_true_e;
+				}
 				status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
 				node->local_data_change_is_enabled = vx_false_e;
 			}
 			if (status) {
 				return status;
 			}
-			node->local_data_set_by_implementation = vx_false_e;
 			node->akernel = nullptr;
 		}
 		if (node->localDataPtr_allocated) {
@@ -2877,6 +2877,9 @@ AgoNode * agoCreateNode(AgoGraph * graph, AgoKernel * kernel)
 	}
 	agoAddNode(&graph->nodeList, node);
 	kernel->ref.internal_count++;
+	graph->reverify = graph->verified;
+    graph->verified = vx_false_e;
+    graph->state = VX_GRAPH_STATE_UNVERIFIED;
 	return node;
 }
 

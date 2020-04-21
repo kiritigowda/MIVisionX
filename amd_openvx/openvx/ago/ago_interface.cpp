@@ -137,6 +137,8 @@ AgoGraph * agoCreateGraph(AgoContext * acontext)
 #endif
 #endif
 	}
+	agraph->reverify = agraph->verified;
+    agraph->verified = vx_false_e;
 	agraph->state = VX_GRAPH_STATE_UNVERIFIED;
 	return (AgoGraph *)agraph;
 }
@@ -1794,8 +1796,9 @@ int agoInitializeGraph(AgoGraph * graph)
 			status = kernel->func(node, ago_kernel_cmd_initialize);
 		}
 		else if (kernel->initialize_f) {
-			if((kernel->user_kernel == vx_true_e) && (kernel->localDataSize == 0))
+			if((kernel->user_kernel == vx_true_e) && (kernel->localDataSize == 0)) {
 				node->local_data_change_is_enabled = vx_true_e;
+			}
 			status = kernel->initialize_f(node, (vx_reference *)node->paramList, node->paramCount);
 			node->local_data_change_is_enabled = vx_false_e;
 		}
@@ -1811,13 +1814,35 @@ int agoInitializeGraph(AgoGraph * graph)
 					return VX_ERROR_NO_MEMORY;
 				}
 				memset(node->localDataPtr, 0, node->localDataSize);
-				//node->local_data_set_by_implementation = vx_true_e;
+				if(kernel->user_kernel == vx_true_e)
+					node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
-			node->local_data_set_by_implementation = vx_true_e;
 			// keep a copy of paramList into paramListForAgeDelay
-			// TBD: needs to handle reverification path
 			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));
+			// handle reverification path
+			vx_bool first_time_verify = ((graph->verified == vx_false_e) && (graph->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
+			if (!first_time_verify) { //re-verify
+				if(kernel->deinitialize_f) {
+					if(node->local_data_set_by_implementation == vx_false_e) {
+						node->local_data_change_is_enabled = vx_true_e;
+					}
+					status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
+					node->local_data_change_is_enabled = vx_false_e;
+					if (status != VX_SUCCESS) {
+						graph->reverify = vx_false_e;
+					}
+				}
+				if (node->localDataSize == 0) {
+					if(node->localDataPtr) {
+						if(!first_time_verify && node->localDataPtr)
+							free(node->localDataPtr);
+						node->localDataSize = 0;
+						node->localDataPtr = nullptr;
+					}
+				}
+				node->local_data_set_by_implementation = vx_false_e;
+			}	
 		}
 	}
 	return VX_SUCCESS;
