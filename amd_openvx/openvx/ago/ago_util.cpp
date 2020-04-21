@@ -600,6 +600,7 @@ int agoShutdownNode(AgoNode * node)
 			if (status) {
 				return status;
 			}
+			node->local_data_set_by_implementation = vx_false_e;
 			node->akernel = nullptr;
 		}
 		if (node->localDataPtr_allocated) {

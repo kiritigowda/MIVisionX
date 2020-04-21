@@ -1818,6 +1818,7 @@ int agoInitializeGraph(AgoGraph * graph)
 					node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
+			node->local_data_set_by_implementation = vx_true_e;
 			// keep a copy of paramList into paramListForAgeDelay
 			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));
 			// handle reverification path
