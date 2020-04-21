@@ -1322,7 +1322,6 @@ vx_status agoVerifyNode(AgoNode * node)
 					}
 					// make sure that the data come from output validator matches with object
 					if (data->u.img.format != meta->data.u.img.format) {
-						printf("%u %u\n",data->u.img.format, meta->data.u.img.format);
 						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_FORMAT, "ERROR: agoVerifyGraph: kernel %s: invalid format for argument#%d\n", kernel->name, arg);
 						return VX_ERROR_INVALID_FORMAT;
 					}
