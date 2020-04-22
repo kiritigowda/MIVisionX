@@ -1792,11 +1792,43 @@ int agoInitializeGraph(AgoGraph * graph)
 	{
 		AgoKernel * kernel = node->akernel;
 		vx_status status = VX_SUCCESS;
+		// handle reverification path
+		vx_bool first_time_verify = ((graph->verified == vx_false_e) && (graph->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
+		if (kernel->user_kernel) {
+			if (!first_time_verify) { //re-verify
+				if(kernel->deinitialize_f) {
+					if(node->local_data_set_by_implementation == vx_false_e) {
+						node->local_data_change_is_enabled = vx_true_e;
+					}
+					status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
+					node->local_data_change_is_enabled = vx_false_e;
+					if (status != VX_SUCCESS) {
+						graph->reverify = vx_false_e;
+						graph->verified = vx_true_e;
+						graph->state = VX_GRAPH_STATE_VERIFIED;
+					}
+					else {
+						graph->reverify = vx_true_e;
+						graph->verified = vx_true_e;
+						graph->state = VX_GRAPH_STATE_VERIFIED;
+					}
+				}
+				if (node->localDataSize == 0) {
+					if(node->localDataPtr) {
+						if(!first_time_verify && node->localDataPtr)
+							free(node->localDataPtr);
+						node->localDataSize = 0;
+						node->localDataPtr = nullptr;
+					}
+				}
+				node->local_data_set_by_implementation = vx_false_e;
+			}
+		}
 		if (kernel->func) {
 			status = kernel->func(node, ago_kernel_cmd_initialize);
 		}
 		else if (kernel->initialize_f) {
-			if((kernel->user_kernel == vx_true_e) && (kernel->localDataSize == 0)) {
+			if((kernel->user_kernel == vx_true_e) && (node->localDataSize == 0)) {
 				node->local_data_change_is_enabled = vx_true_e;
 			}
 			status = kernel->initialize_f(node, (vx_reference *)node->paramList, node->paramCount);
@@ -1818,32 +1850,8 @@ int agoInitializeGraph(AgoGraph * graph)
 					node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
-			node->local_data_set_by_implementation = vx_true_e;
 			// keep a copy of paramList into paramListForAgeDelay
-			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));
-			// handle reverification path
-			vx_bool first_time_verify = ((graph->verified == vx_false_e) && (graph->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
-			if (!first_time_verify) { //re-verify
-				if(kernel->deinitialize_f) {
-					if(node->local_data_set_by_implementation == vx_false_e) {
-						node->local_data_change_is_enabled = vx_true_e;
-					}
-					status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
-					node->local_data_change_is_enabled = vx_false_e;
-					if (status != VX_SUCCESS) {
-						graph->reverify = vx_false_e;
-					}
-				}
-				if (node->localDataSize == 0) {
-					if(node->localDataPtr) {
-						if(!first_time_verify && node->localDataPtr)
-							free(node->localDataPtr);
-						node->localDataSize = 0;
-						node->localDataPtr = nullptr;
-					}
-				}
-				node->local_data_set_by_implementation = vx_false_e;
-			}	
+			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));	
 		}
 	}
 	return VX_SUCCESS;
