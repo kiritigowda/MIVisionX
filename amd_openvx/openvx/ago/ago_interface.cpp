@@ -144,7 +144,9 @@ AgoGraph * agoCreateGraph(AgoContext * acontext)
 #endif
 #endif
 	}
-
+	agraph->reverify = agraph->verified;
+    agraph->verified = vx_false_e;
+	agraph->state = VX_GRAPH_STATE_UNVERIFIED;
 	return (AgoGraph *)agraph;
 }
 
@@ -215,7 +217,6 @@ int agoOptimizeGraph(AgoGraph * agraph)
 		// run DRAMA graph optimizer
 		agraph->status = agoOptimizeDrama(agraph);
 	}
-
 	return agraph->status;
 }
 
@@ -1197,7 +1198,6 @@ vx_status agoVerifyNode(AgoNode * node)
 	AgoGraph * graph = (AgoGraph *)node->ref.scope;
 	AgoKernel * kernel = node->akernel;
 	vx_status status = VX_SUCCESS;
-
 	// check if node has required arguments and initialize data required for further graph processing
 	node->hierarchical_level = 0;
 	for (vx_uint32 arg = 0; arg < AGO_MAX_PARAMS; arg++) {
@@ -1476,6 +1476,38 @@ vx_status agoVerifyNode(AgoNode * node)
 						data->isNotFullyConfigured = vx_false_e;
 					}
 				}
+				else if (meta->data.ref.type == VX_TYPE_OBJECT_ARRAY) {
+					bool updated = false;
+					if (data->isVirtual) {
+						// update itemtype if not specified
+						if (data->u.objarr.itemtype == VX_TYPE_INVALID) {
+							data->u.objarr.itemtype = meta->data.u.objarr.itemtype;
+							updated = true;
+						}
+						if (data->u.objarr.numitems == 0) {
+							data->u.objarr.numitems = meta->data.u.objarr.numitems;
+							updated = true;
+						}
+					}
+					// make sure that the data come from output validator matches with object
+					if (data->u.objarr.itemtype != meta->data.u.objarr.itemtype) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_TYPE, "ERROR: agoVerifyGraph: kernel %s: invalid object-array type for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_TYPE;
+					}
+					else if (!data->u.objarr.numitems || (meta->data.u.objarr.numitems && meta->data.u.objarr.numitems > data->u.objarr.numitems)) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_DIMENSION, "ERROR: agoVerifyGraph: kernel %s: invalid dimension for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_DIMENSION;
+					}
+					if (updated) {
+						data->isNotFullyConfigured = vx_true_e;
+						char desc[64]; sprintf(desc, "objectarray-virtual:%u", data->u.objarr.itemtype);
+						if (agoGetDataFromDescription(graph->ref.context, graph, data, desc)) {
+							agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: agoVerifyGraph: agoVerifyGraph update failed for %s\n", desc);
+							return -1;
+						}
+						data->isNotFullyConfigured = vx_false_e;
+					}
+				}
 				else if (meta->data.ref.type == VX_TYPE_SCALAR) {
 					// make sure that the data come from output validator matches with object
 					if (data->u.scalar.type != meta->data.u.scalar.type) {
@@ -1492,6 +1524,12 @@ vx_status agoVerifyNode(AgoNode * node)
 				}
 				else if (meta->data.ref.type == VX_TYPE_DISTRIBUTION) {
 					// nothing to do
+				}
+				else if (meta->data.ref.type == VX_TYPE_THRESHOLD) {
+					if ((data->u.thr.thresh_type != meta->data.u.thr.thresh_type)) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_TYPE, "ERROR: agoVerifyGraph: kernel %s: invalid threshold meta for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_TYPE;
+					}
 				}
 				else if (meta->data.ref.type == VX_TYPE_LUT) {
 					// nothing to do
@@ -1579,7 +1617,6 @@ int agoVerifyGraph(AgoGraph * graph)
 			return status;
 		}
 	}
-
 	// compute node hierarchy in the graph: this takes care of
 	//    - single writers
 	//    - no loops
@@ -1762,11 +1799,47 @@ int agoInitializeGraph(AgoGraph * graph)
 	{
 		AgoKernel * kernel = node->akernel;
 		vx_status status = VX_SUCCESS;
+		// handle reverification path
+		vx_bool first_time_verify = ((graph->verified == vx_false_e) && (graph->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
+		if (kernel->user_kernel) {
+			if (!first_time_verify) { //re-verify
+				if(kernel->deinitialize_f) {
+					if(node->local_data_set_by_implementation == vx_false_e) {
+						node->local_data_change_is_enabled = vx_true_e;
+					}
+					status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
+					node->local_data_change_is_enabled = vx_false_e;
+					if (status != VX_SUCCESS) {
+						graph->reverify = vx_false_e;
+						graph->verified = vx_true_e;
+						graph->state = VX_GRAPH_STATE_VERIFIED;
+					}
+					else {
+						graph->reverify = vx_true_e;
+						graph->verified = vx_true_e;
+						graph->state = VX_GRAPH_STATE_VERIFIED;
+					}
+				}
+				if (node->localDataSize == 0) {
+					if(node->localDataPtr) {
+						if(!first_time_verify && node->localDataPtr)
+							free(node->localDataPtr);
+						node->localDataSize = 0;
+						node->localDataPtr = nullptr;
+					}
+				}
+				node->local_data_set_by_implementation = vx_false_e;
+			}
+		}
 		if (kernel->func) {
 			status = kernel->func(node, ago_kernel_cmd_initialize);
 		}
 		else if (kernel->initialize_f) {
+			if((kernel->user_kernel == vx_true_e) && (node->localDataSize == 0)) {
+				node->local_data_change_is_enabled = vx_true_e;
+			}
 			status = kernel->initialize_f(node, (vx_reference *)node->paramList, node->paramCount);
+			node->local_data_change_is_enabled = vx_false_e;
 		}
 		if (status) {
 			return status;
@@ -1780,11 +1853,12 @@ int agoInitializeGraph(AgoGraph * graph)
 					return VX_ERROR_NO_MEMORY;
 				}
 				memset(node->localDataPtr, 0, node->localDataSize);
+				if(kernel->user_kernel == vx_true_e)
+					node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
 			// keep a copy of paramList into paramListForAgeDelay
-			// TBD: needs to handle reverification path
-			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));
+			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));	
 		}
 	}
 	return VX_SUCCESS;
@@ -1957,7 +2031,7 @@ int agoExecuteGraph(AgoGraph * graph)
 	else if (!graph->nodeList.head)
 		return VX_SUCCESS;
 	int status = VX_SUCCESS;
-
+	graph->state = VX_GRAPH_STATE_RUNNING;
 	agoPerfProfileEntry(graph, ago_profile_type_exec_begin, &graph->ref);
 	agoPerfCaptureStart(&graph->perf);
 
@@ -2130,7 +2204,7 @@ int agoExecuteGraph(AgoGraph * graph)
 				if (kernel->func) {
 					status = kernel->func(node, ago_kernel_cmd_execute);
 					if (status == AGO_ERROR_KERNEL_NOT_IMPLEMENTED)
-						status = VX_ERROR_NOT_IMPLEMENTED;
+						status = VX_ERROR_NOT_IMPLEMENTED;	
 				}
 				else if (kernel->kernel_f) {
 					status = kernel->kernel_f(node, (vx_reference *)node->paramList, node->paramCount);
@@ -2200,6 +2274,10 @@ int agoExecuteGraph(AgoGraph * graph)
 	agoPerfCaptureStop(&graph->perf);
 	agoPerfProfileEntry(graph, ago_profile_type_exec_end, &graph->ref);
 	graph->execFrameCount++;
+	if (status == VX_SUCCESS)
+        graph->state = VX_GRAPH_STATE_COMPLETED;
+    else
+        graph->state = VX_GRAPH_STATE_ABANDONED;
 	return status;
 }
 
@@ -2230,6 +2308,16 @@ vx_status agoDirective(vx_reference reference, vx_enum directive)
 				break;
 			case VX_DIRECTIVE_DISABLE_LOGGING:
 				reference->enable_logging = false;
+				break;
+			case VX_DIRECTIVE_ENABLE_PERFORMANCE:
+				if (context) reference->enable_perf = true;
+				else
+					status = VX_ERROR_NOT_SUPPORTED;
+				break;
+			case VX_DIRECTIVE_DISABLE_PERFORMANCE:
+				if (context) reference->enable_perf = false;
+				else
+					status = VX_ERROR_NOT_SUPPORTED;
 				break;
 			case VX_DIRECTIVE_AMD_READ_ONLY:
 				if (reference->type == VX_TYPE_CONVOLUTION || reference->type == VX_TYPE_MATRIX) {
@@ -2461,9 +2549,8 @@ int agoWaitGraph(AgoGraph * graph)
 				}
 			}
 		}
-		if (status == VX_SUCCESS) {
+		if(status == VX_SUCCESS)
 			status = graph->status;
-		}
 	}
 	return status;
 }

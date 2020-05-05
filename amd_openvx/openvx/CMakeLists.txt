@@ -42,6 +42,7 @@ list(APPEND SOURCES
 	ago/ago_haf_cpu_fast_corners.cpp
 	ago/ago_haf_cpu_filter.cpp
 	ago/ago_haf_cpu_geometric.cpp
+	ago/ago_haf_cpu_generic_functions.cpp
 	ago/ago_haf_cpu_harris.cpp
 	ago/ago_haf_cpu_histogram.cpp
 	ago/ago_haf_cpu_logical.cpp
@@ -64,6 +65,7 @@ list(APPEND SOURCES
 )
 
 add_library(openvx SHARED ${SOURCES})
+add_library(vxu SHARED api/vxu.cpp)
 
 if (OpenCL_FOUND)
 	target_compile_definitions(openvx PUBLIC ENABLE_OPENCL=1)
