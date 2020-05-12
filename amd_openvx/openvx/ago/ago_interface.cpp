@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
  
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -2446,12 +2446,15 @@ int agoScheduleGraph(AgoGraph * graph)
 	return status;
 }
 
+
 int agoWaitGraph(AgoGraph * graph)
 {
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidGraph(graph)) {
 		status = VX_SUCCESS;
 		graph->threadWaitCount++;
+		if (graph->threadScheduleCount == 0) // the graph was never scheduled so return VX_FAILURE
+			return VX_FAILURE; 
 		if (graph->hThread) {
 			while (graph->threadExecuteCount != graph->threadScheduleCount) {
 				if (WaitForSingleObject(graph->hSemFromThread, INFINITE) != WAIT_OBJECT_0) {
@@ -2461,9 +2464,8 @@ int agoWaitGraph(AgoGraph * graph)
 				}
 			}
 		}
-		if (status == VX_SUCCESS) {
+		if(status == VX_SUCCESS)
 			status = graph->status;
-		}
 	}
 	return status;
 }
