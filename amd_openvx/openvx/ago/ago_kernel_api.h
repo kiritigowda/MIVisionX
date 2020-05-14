@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
  
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,7 @@ int agoKernel_Not_U8_U1(AgoNode * node, AgoKernelCommand cmd);
 int agoKernel_Not_U1_U8(AgoNode * node, AgoKernelCommand cmd);
 int agoKernel_Not_U1_U1(AgoNode * node, AgoKernelCommand cmd);
 int agoKernel_Lut_U8_U8(AgoNode * node, AgoKernelCommand cmd);
+int agoKernel_Lut_S16_S16(AgoNode * node, AgoKernelCommand cmd);
 int agoKernel_Threshold_U8_U8_Binary(AgoNode * node, AgoKernelCommand cmd);
 int agoKernel_Threshold_U8_U8_Range(AgoNode * node, AgoKernelCommand cmd);
 int agoKernel_Threshold_U1_U8_Binary(AgoNode * node, AgoKernelCommand cmd);

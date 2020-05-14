@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
  
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1414,7 +1414,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 			}
 		}
 		// mark the children of delay element as part of delay object
-		agoMarkChildrenAsPartOfDelay(data);
+		//agoMarkChildrenAsPartOfDelay(data);
 		// sanity check and update
 		if (agoDataSanityCheckAndUpdate(data)) {
 			agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: agoGetDataFromDescription: agoDataSanityCheckAndUpdate failed for object-array\n");
@@ -1486,6 +1486,10 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		if (data->u.lut.type != VX_TYPE_UINT8 && data->u.lut.type != VX_TYPE_INT16) 
 			return -1;
 		if (sscanf(++s, "" VX_FMT_SIZE "", &data->u.lut.count) != 1) return -1;
+		if (data->u.lut.type == VX_TYPE_UINT8)
+			data->u.lut.offset = 0;
+		else if(data->u.lut.type == VX_TYPE_INT16)
+			data->u.lut.offset = (vx_uint32)(data->u.lut.count/2);
 		// sanity check and update
 		if (agoDataSanityCheckAndUpdate(data)) {
 			agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: agoGetDataFromDescription: agoDataSanityCheckAndUpdate failed for lut\n");

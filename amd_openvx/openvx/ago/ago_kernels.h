@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
  
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,9 @@ enum vx_kernel_amd_e {
 	VX_KERNEL_AMD_THRESHOLD_U8_U8_RANGE,
 	VX_KERNEL_AMD_THRESHOLD_NOT_U8_U8_BINARY,
 	VX_KERNEL_AMD_THRESHOLD_NOT_U8_U8_RANGE,
+
+	// Element-wise 1-channel: S16 = op S16 
+	VX_KERNEL_AMD_LUT_S16_S16,
 
 	// Element-wise 1-channel: U8 = op U1 (1)
 	VX_KERNEL_AMD_NOT_U8_U1,

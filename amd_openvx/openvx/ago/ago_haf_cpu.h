@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
  
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -148,6 +148,17 @@ int HafCpu_Lut_U8_U8
 		vx_uint8    * pSrcImage,
 		vx_uint32     srcImageStrideInBytes,
 		vx_uint8    * pLut
+	);
+int HafCpu_Lut_S16_S16
+	(
+		vx_uint32     dstWidth,
+		vx_uint32     dstHeight,
+		vx_int16    * pDstImage,
+		vx_uint32     dstImageStrideInBytes,
+		vx_int16    * pSrcImage,
+		vx_uint32     srcImageStrideInBytes,
+		vx_int16    * pLut,
+		vx_uint32     offset
 	);
 int HafCpu_Threshold_U8_U8_Binary
 	(
