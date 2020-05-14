@@ -2548,7 +2548,9 @@ int agoWaitGraph(AgoGraph * graph)
 		if (graph->hThread) {
 			graph->threadThreadWaitState = 1;
 			while (graph->threadThreadWaitState == 1) {
+				// wait for the agoGraphThreadFunction to be done
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				// release the semaphore in case the agoScheduleGraph was called before the agoGraphThreadFunction
                 ReleaseSemaphore(graph->hSemToThread, 1, nullptr);
             }
 			while (graph->threadExecuteCount < graph->threadScheduleCount) {
