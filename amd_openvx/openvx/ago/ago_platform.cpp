@@ -233,7 +233,6 @@ DWORD WaitForSingleObject(HANDLE h, DWORD dwMilliseconds)
 		if(*(int*)h == VX_SEMAPHORE) {
 			vx_semaphore * sem = (vx_semaphore *)h;
 			{
-				printf("wait\n");
 				unique_lock<mutex> lk(sem->mtx);
 				sem->cv.wait(lk); // TBD: implement with timeout
 			}

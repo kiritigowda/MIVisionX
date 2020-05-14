@@ -30,13 +30,12 @@ static DWORD WINAPI agoGraphThreadFunction(LPVOID graph_)
 static void agoGraphThreadFunction(LPVOID graph_)
 #endif
 {
-	printf("thread function\n");
 	AgoGraph * graph = (AgoGraph *)graph_;
 	while (WaitForSingleObject(graph->hSemToThread, INFINITE) == WAIT_OBJECT_0) {
-		printf("thread function inside\n");
+		graph->threadThreadWaitState = 2;
 		if (graph->threadThreadTerminationState)
 			break;
-		printf("execute graph\n");
+
 		// execute graph
 		graph->status = agoProcessGraph(graph);
 
@@ -44,11 +43,9 @@ static void agoGraphThreadFunction(LPVOID graph_)
 		graph->threadExecuteCount++;
 		ReleaseSemaphore(graph->hSemFromThread, 1, nullptr);
 	}
-	printf("thread function outisde\n");
 	// inform caller about termination
 	graph->threadThreadTerminationState = 2;
 	ReleaseSemaphore(graph->hSemFromThread, 1, nullptr);
-	printf("thread function done\n");
 #if _WIN32
     return 0;
 #endif
@@ -126,7 +123,6 @@ AgoGraph * agoCreateGraph(AgoContext * acontext)
 		agoAddGraph(&acontext->graphList, agraph);
 		agraph->ref.external_count++;
 	}
-
 	if (acontext->thread_config & 1) {
 		// create semaphore and thread for graph scheduling: limit 1000 pending requests
 		agraph->hSemToThread = CreateSemaphore(nullptr, 0, 1000, nullptr);
@@ -148,7 +144,9 @@ AgoGraph * agoCreateGraph(AgoContext * acontext)
 #endif
 #endif
 	}
-
+	agraph->reverify = agraph->verified;
+    agraph->verified = vx_false_e;
+	agraph->state = VX_GRAPH_STATE_UNVERIFIED;
 	return (AgoGraph *)agraph;
 }
 
@@ -1479,6 +1477,38 @@ vx_status agoVerifyNode(AgoNode * node)
 						data->isNotFullyConfigured = vx_false_e;
 					}
 				}
+				else if (meta->data.ref.type == VX_TYPE_OBJECT_ARRAY) {
+					bool updated = false;
+					if (data->isVirtual) {
+						// update itemtype if not specified
+						if (data->u.objarr.itemtype == VX_TYPE_INVALID) {
+							data->u.objarr.itemtype = meta->data.u.objarr.itemtype;
+							updated = true;
+						}
+						if (data->u.objarr.numitems == 0) {
+							data->u.objarr.numitems = meta->data.u.objarr.numitems;
+							updated = true;
+						}
+					}
+					// make sure that the data come from output validator matches with object
+					if (data->u.objarr.itemtype != meta->data.u.objarr.itemtype) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_TYPE, "ERROR: agoVerifyGraph: kernel %s: invalid object-array type for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_TYPE;
+					}
+					else if (!data->u.objarr.numitems || (meta->data.u.objarr.numitems && meta->data.u.objarr.numitems > data->u.objarr.numitems)) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_DIMENSION, "ERROR: agoVerifyGraph: kernel %s: invalid dimension for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_DIMENSION;
+					}
+					if (updated) {
+						data->isNotFullyConfigured = vx_true_e;
+						char desc[64]; sprintf(desc, "objectarray-virtual:%u", data->u.objarr.itemtype);
+						if (agoGetDataFromDescription(graph->ref.context, graph, data, desc)) {
+							agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: agoVerifyGraph: agoVerifyGraph update failed for %s\n", desc);
+							return -1;
+						}
+						data->isNotFullyConfigured = vx_false_e;
+					}
+				}
 				else if (meta->data.ref.type == VX_TYPE_SCALAR) {
 					// make sure that the data come from output validator matches with object
 					if (data->u.scalar.type != meta->data.u.scalar.type) {
@@ -1495,6 +1525,12 @@ vx_status agoVerifyNode(AgoNode * node)
 				}
 				else if (meta->data.ref.type == VX_TYPE_DISTRIBUTION) {
 					// nothing to do
+				}
+				else if (meta->data.ref.type == VX_TYPE_THRESHOLD) {
+					if ((data->u.thr.thresh_type != meta->data.u.thr.thresh_type)) {
+						agoAddLogEntry(&kernel->ref, VX_ERROR_INVALID_TYPE, "ERROR: agoVerifyGraph: kernel %s: invalid threshold meta for argument#%d\n", kernel->name, arg);
+						return VX_ERROR_INVALID_TYPE;
+					}
 				}
 				else if (meta->data.ref.type == VX_TYPE_LUT) {
 					// nothing to do
@@ -1765,11 +1801,47 @@ int agoInitializeGraph(AgoGraph * graph)
 	{
 		AgoKernel * kernel = node->akernel;
 		vx_status status = VX_SUCCESS;
+		// handle reverification path
+		vx_bool first_time_verify = ((graph->verified == vx_false_e) && (graph->reverify == vx_false_e)) ? vx_true_e : vx_false_e;
+		if (kernel->user_kernel) {
+			if (!first_time_verify) { //re-verify
+				if(kernel->deinitialize_f) {
+					if(node->local_data_set_by_implementation == vx_false_e) {
+						node->local_data_change_is_enabled = vx_true_e;
+					}
+					status = kernel->deinitialize_f(node, (vx_reference *)node->paramList, node->paramCount);
+					node->local_data_change_is_enabled = vx_false_e;
+					if (status != VX_SUCCESS) {
+						graph->reverify = vx_false_e;
+						graph->verified = vx_true_e;
+						graph->state = VX_GRAPH_STATE_VERIFIED;
+					}
+					else {
+						graph->reverify = vx_true_e;
+						graph->verified = vx_true_e;
+						graph->state = VX_GRAPH_STATE_VERIFIED;
+					}
+				}
+				if (node->localDataSize == 0) {
+					if(node->localDataPtr) {
+						if(!first_time_verify && node->localDataPtr)
+							free(node->localDataPtr);
+						node->localDataSize = 0;
+						node->localDataPtr = nullptr;
+					}
+				}
+				node->local_data_set_by_implementation = vx_false_e;
+			}
+		}
 		if (kernel->func) {
 			status = kernel->func(node, ago_kernel_cmd_initialize);
 		}
 		else if (kernel->initialize_f) {
+			if((kernel->user_kernel == vx_true_e) && (node->localDataSize == 0)) {
+				node->local_data_change_is_enabled = vx_true_e;
+			}
 			status = kernel->initialize_f(node, (vx_reference *)node->paramList, node->paramCount);
+			node->local_data_change_is_enabled = vx_false_e;
 		}
 		if (status) {
 			return status;
@@ -1783,11 +1855,12 @@ int agoInitializeGraph(AgoGraph * graph)
 					return VX_ERROR_NO_MEMORY;
 				}
 				memset(node->localDataPtr, 0, node->localDataSize);
+				if(kernel->user_kernel == vx_true_e)
+					node->local_data_set_by_implementation = vx_true_e;
 			}
 			node->initialized = true;
 			// keep a copy of paramList into paramListForAgeDelay
-			// TBD: needs to handle reverification path
-			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));
+			memcpy(node->paramListForAgeDelay, node->paramList, sizeof(node->paramListForAgeDelay));	
 		}
 	}
 	return VX_SUCCESS;
@@ -1960,7 +2033,7 @@ int agoExecuteGraph(AgoGraph * graph)
 	else if (!graph->nodeList.head)
 		return VX_SUCCESS;
 	int status = VX_SUCCESS;
-
+	graph->state = VX_GRAPH_STATE_RUNNING;
 	agoPerfProfileEntry(graph, ago_profile_type_exec_begin, &graph->ref);
 	agoPerfCaptureStart(&graph->perf);
 
@@ -2203,6 +2276,11 @@ int agoExecuteGraph(AgoGraph * graph)
 	agoPerfCaptureStop(&graph->perf);
 	agoPerfProfileEntry(graph, ago_profile_type_exec_end, &graph->ref);
 	graph->execFrameCount++;
+	if (status == VX_SUCCESS)
+        graph->state = VX_GRAPH_STATE_COMPLETED;
+    else
+        graph->state = VX_GRAPH_STATE_ABANDONED;
+
 	return status;
 }
 
@@ -2233,6 +2311,16 @@ vx_status agoDirective(vx_reference reference, vx_enum directive)
 				break;
 			case VX_DIRECTIVE_DISABLE_LOGGING:
 				reference->enable_logging = false;
+				break;
+			case VX_DIRECTIVE_ENABLE_PERFORMANCE:
+				if (context) reference->enable_perf = true;
+				else
+					status = VX_ERROR_NOT_SUPPORTED;
+				break;
+			case VX_DIRECTIVE_DISABLE_PERFORMANCE:
+				if (context) reference->enable_perf = false;
+				else
+					status = VX_ERROR_NOT_SUPPORTED;
 				break;
 			case VX_DIRECTIVE_AMD_READ_ONLY:
 				if (reference->type == VX_TYPE_CONVOLUTION || reference->type == VX_TYPE_MATRIX) {
@@ -2425,14 +2513,11 @@ int agoProcessGraph(AgoGraph * graph)
 
 int agoScheduleGraph(AgoGraph * graph)
 {
-	printf("schedule graph\n");
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidGraph(graph)) {
-		printf("schedule valid graph\n");
 		status = VX_SUCCESS;
 		graph->threadScheduleCount++;
 		if (graph->hThread) {
-			printf("schedule hthread\n");
 			if (!graph->verified) {
 				// make sure to verify the graph in master thread
 				CAgoLock lock(graph->cs);
@@ -2440,7 +2525,6 @@ int agoScheduleGraph(AgoGraph * graph)
 			}
 			if (status == VX_SUCCESS) {
 				// inform graph thread to execute
-				printf("schedule release semaphore\n");
 				if (!ReleaseSemaphore(graph->hSemToThread, 1, nullptr)) {
 					status = VX_ERROR_NO_RESOURCES;
 				}
@@ -2450,10 +2534,8 @@ int agoScheduleGraph(AgoGraph * graph)
 			status = agoProcessGraph(graph);
 		}
 	}
-	printf("schedule verify status %d\n", status);
 	return status;
 }
-
 
 int agoWaitGraph(AgoGraph * graph)
 {
@@ -2461,19 +2543,15 @@ int agoWaitGraph(AgoGraph * graph)
 	if (agoIsValidGraph(graph)) {
 		status = VX_SUCCESS;
 		graph->threadWaitCount++;
-		// if (graph->threadScheduleCount == 0) // the graph was never scheduled so return VX_FAILURE
-		// 	return VX_FAILURE; 
+		if (graph->threadScheduleCount <= 0) // the graph was never scheduled so return VX_FAILURE
+			return VX_FAILURE; 
 		if (graph->hThread) {
-			while (graph->threadExecuteCount != graph->threadScheduleCount) {
-				graph->threadThreadTerminationState = 1;
-            	ReleaseSemaphore(graph->hSemToThread, 1, nullptr);
-				while (graph->threadThreadTerminationState == 1) {
-					printf("waiting\n");
-					std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                	ReleaseSemaphore(graph->hSemToThread, 1, nullptr);
-				}
-				printf("waitgrpah wait status %d\n", graph->threadThreadTerminationState);
-				printf("waitgraph wait for signal %d %d\n", graph->threadExecuteCount, graph->threadScheduleCount);
+			graph->threadThreadWaitState = 1;
+			while (graph->threadThreadWaitState == 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                ReleaseSemaphore(graph->hSemToThread, 1, nullptr);
+            }
+			while (graph->threadExecuteCount < graph->threadScheduleCount) {
 				if (WaitForSingleObject(graph->hSemFromThread, INFINITE) != WAIT_OBJECT_0) {
 					agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: agoWaitGraph: WaitForSingleObject failed\n");
 					status = VX_FAILURE;
