@@ -30,11 +30,13 @@ static DWORD WINAPI agoGraphThreadFunction(LPVOID graph_)
 static void agoGraphThreadFunction(LPVOID graph_)
 #endif
 {
+	printf("thread function\n");
 	AgoGraph * graph = (AgoGraph *)graph_;
 	while (WaitForSingleObject(graph->hSemToThread, INFINITE) == WAIT_OBJECT_0) {
+		printf("thread function inside\n");
 		if (graph->threadThreadTerminationState)
 			break;
-
+		printf("execute graph\n");
 		// execute graph
 		graph->status = agoProcessGraph(graph);
 
@@ -42,9 +44,11 @@ static void agoGraphThreadFunction(LPVOID graph_)
 		graph->threadExecuteCount++;
 		ReleaseSemaphore(graph->hSemFromThread, 1, nullptr);
 	}
+	printf("thread function outisde\n");
 	// inform caller about termination
 	graph->threadThreadTerminationState = 2;
 	ReleaseSemaphore(graph->hSemFromThread, 1, nullptr);
+	printf("thread function done\n");
 #if _WIN32
     return 0;
 #endif
@@ -202,7 +206,6 @@ int agoReleaseGraph(AgoGraph * agraph)
             LeaveCriticalSection(&agraph->cs);
         }
 	}
-
 	return status;
 }
 
@@ -2422,11 +2425,14 @@ int agoProcessGraph(AgoGraph * graph)
 
 int agoScheduleGraph(AgoGraph * graph)
 {
+	printf("schedule graph\n");
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidGraph(graph)) {
+		printf("schedule valid graph\n");
 		status = VX_SUCCESS;
 		graph->threadScheduleCount++;
 		if (graph->hThread) {
+			printf("schedule hthread\n");
 			if (!graph->verified) {
 				// make sure to verify the graph in master thread
 				CAgoLock lock(graph->cs);
@@ -2434,6 +2440,7 @@ int agoScheduleGraph(AgoGraph * graph)
 			}
 			if (status == VX_SUCCESS) {
 				// inform graph thread to execute
+				printf("schedule release semaphore\n");
 				if (!ReleaseSemaphore(graph->hSemToThread, 1, nullptr)) {
 					status = VX_ERROR_NO_RESOURCES;
 				}
@@ -2443,6 +2450,7 @@ int agoScheduleGraph(AgoGraph * graph)
 			status = agoProcessGraph(graph);
 		}
 	}
+	printf("schedule verify status %d\n", status);
 	return status;
 }
 
@@ -2453,10 +2461,19 @@ int agoWaitGraph(AgoGraph * graph)
 	if (agoIsValidGraph(graph)) {
 		status = VX_SUCCESS;
 		graph->threadWaitCount++;
-		if (graph->threadScheduleCount == 0) // the graph was never scheduled so return VX_FAILURE
-			return VX_FAILURE; 
+		// if (graph->threadScheduleCount == 0) // the graph was never scheduled so return VX_FAILURE
+		// 	return VX_FAILURE; 
 		if (graph->hThread) {
 			while (graph->threadExecuteCount != graph->threadScheduleCount) {
+				graph->threadThreadTerminationState = 1;
+            	ReleaseSemaphore(graph->hSemToThread, 1, nullptr);
+				while (graph->threadThreadTerminationState == 1) {
+					printf("waiting\n");
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                	ReleaseSemaphore(graph->hSemToThread, 1, nullptr);
+				}
+				printf("waitgrpah wait status %d\n", graph->threadThreadTerminationState);
+				printf("waitgraph wait for signal %d %d\n", graph->threadExecuteCount, graph->threadScheduleCount);
 				if (WaitForSingleObject(graph->hSemFromThread, INFINITE) != WAIT_OBJECT_0) {
 					agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: agoWaitGraph: WaitForSingleObject failed\n");
 					status = VX_FAILURE;
