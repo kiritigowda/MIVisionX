@@ -2715,7 +2715,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 		CAgoLock lock2(graph->ref.context->cs);
 
 		// mark that graph is not verified and can't be executed
-		//graph->verified = vx_false_e;
+		graph->verified = vx_false_e;
 		graph->isReadyToExecute = vx_false_e;
         graph->state = VX_GRAPH_STATE_UNVERIFIED;
 
@@ -3102,8 +3102,11 @@ NODE
 VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel kernel)
 {
 	vx_node node = NULL;
-	if (agoIsValidGraph(graph) && agoIsValidKernel(kernel) && !graph->verified && kernel->finalized) {
+	if (agoIsValidGraph(graph) && agoIsValidKernel(kernel) && kernel->finalized) {
 		CAgoLock lock(graph->cs);
+		graph->reverify = graph->verified;
+		graph->verified = vx_false_e;
+		graph->state = VX_GRAPH_STATE_UNVERIFIED;
 		node = agoCreateNode(graph, kernel);
 		node->ref.external_count++;
 	}
@@ -3338,7 +3341,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxAssignNodeCallback(vx_node node, vx_nodecom
 {
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidNode(node)) {
+		printf("graph action calling\n");
 		node->callback = callback;
+		if (node->callback) printf("retrrieve node\n");
+		vx_action action = node->callback(node);
+		if (action == VX_ACTION_ABANDON) printf("graph action abandon\n");
+	
 		status = VX_SUCCESS;
 	}
 	return status;

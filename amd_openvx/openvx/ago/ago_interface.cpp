@@ -2198,6 +2198,7 @@ int agoExecuteGraph(AgoGraph * graph)
 				}
 				agoPerfProfileEntry(graph, ago_profile_type_copy_end, &node->ref);
 #endif
+
 				// execute node
 				agoPerfProfileEntry(graph, ago_profile_type_exec_begin, &node->ref);
 				agoPerfCaptureStart(&node->perf);
@@ -2490,7 +2491,6 @@ int agoProcessGraph(AgoGraph * graph)
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidGraph(graph)) {
 		CAgoLock lock(graph->cs);
-
 		// make sure that graph is verified
 		status = VX_SUCCESS;
 		if (!graph->verified) {
