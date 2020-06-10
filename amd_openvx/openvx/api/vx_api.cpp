@@ -3341,12 +3341,18 @@ VX_API_ENTRY vx_status VX_API_CALL vxAssignNodeCallback(vx_node node, vx_nodecom
 {
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidNode(node)) {
-		printf("graph action calling\n");
 		node->callback = callback;
-		if (node->callback) printf("retrrieve node\n");
-		vx_action action = node->callback(node);
-		if (action == VX_ACTION_ABANDON) printf("graph action abandon\n");
-	
+		
+		// vx_graph graph = (vx_graph)node->ref.scope;
+		// CAgoLock lock(graph->cs);
+		//const char * name = "com.amd.openvx.Box_U8_U8_3x3";
+		// if (agoAssignNodeCallback(&graph->nodeList, node, name, callback)) {
+		// 	agoAddLogEntry(&node->ref, status, "ERROR: vxAssignNodeCallback: failed for %s\n", node->akernel->name);
+		// }	
+		// else {
+		// 	status = VX_SUCCESS;	
+		// }
+
 		status = VX_SUCCESS;
 	}
 	return status;
@@ -3365,6 +3371,7 @@ VX_API_ENTRY vx_nodecomplete_f VX_API_CALL vxRetrieveNodeCallback(vx_node node)
 	if (agoIsValidNode(node)) {
 		callback = node->callback;
 	}
+
 	return callback;
 }
 
