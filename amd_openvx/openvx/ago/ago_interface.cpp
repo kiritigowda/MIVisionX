@@ -2232,7 +2232,7 @@ int agoExecuteGraph(AgoGraph * graph)
 					}
 				}
 #endif
-
+				// node callback
 				if (node->callback) {
 					vx_action action = node->callback(node);
 					if (action == VX_ACTION_ABANDON) {
