@@ -2715,7 +2715,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 		CAgoLock lock2(graph->ref.context->cs);
 
 		// mark that graph is not verified and can't be executed
-		graph->verified = vx_false_e;
+		//graph->verified = vx_false_e;
 		graph->isReadyToExecute = vx_false_e;
         graph->state = VX_GRAPH_STATE_UNVERIFIED;
 
@@ -3102,11 +3102,11 @@ NODE
 VX_API_ENTRY vx_node VX_API_CALL vxCreateGenericNode(vx_graph graph, vx_kernel kernel)
 {
 	vx_node node = NULL;
-	if (agoIsValidGraph(graph) && agoIsValidKernel(kernel) && kernel->finalized) {
+	if (agoIsValidGraph(graph) && agoIsValidKernel(kernel) && /*!graph->verified &&*/ kernel->finalized) {
 		CAgoLock lock(graph->cs);
-		graph->reverify = graph->verified;
-		graph->verified = vx_false_e;
-		graph->state = VX_GRAPH_STATE_UNVERIFIED;
+		// graph->reverify = graph->verified;
+		// graph->verified = vx_false_e;
+		// graph->state = VX_GRAPH_STATE_UNVERIFIED;
 		node = agoCreateNode(graph, kernel);
 		node->ref.external_count++;
 	}
