@@ -776,7 +776,6 @@ void agoAddGraph(AgoGraphList * graphList, AgoGraph * graph);
 vx_enum agoAddUserStruct(AgoContext * acontext, vx_size size, vx_char * name);
 AgoGraph * agoRemoveGraph(AgoGraphList * list, AgoGraph * item);
 int agoRemoveNode(AgoNodeList * nodeList, AgoNode * node, bool moveToTrash);
-int agoAssignNodeCallback(AgoNodeList * nodeList, AgoNode * item, vx_nodecomplete_f callback);
 int agoShutdownNode(AgoNode * node);
 int agoRemoveData(AgoDataList * list, AgoData * item, AgoData ** trash);
 AgoKernel * agoRemoveKernel(AgoKernelList * list, AgoKernel * item);

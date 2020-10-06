@@ -3027,7 +3027,6 @@ void agoImportNodeConfig(AgoNode * childnode, AgoNode * anode)
 {
 	childnode->attr_border_mode = anode->attr_border_mode;
 	childnode->attr_affinity = anode->attr_affinity;
-	//childnode->akernel->localDataSize = anode->akernel->localDataSize;
 	if (anode->callback) {
 		// TBD: need a mechanism to propagate callback changes later in the flow and
 		// and ability to have multiple callbacks for the same node as multiple original nodes
