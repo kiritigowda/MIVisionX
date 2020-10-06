@@ -3342,7 +3342,11 @@ VX_API_ENTRY vx_status VX_API_CALL vxAssignNodeCallback(vx_node node, vx_nodecom
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidNode(node)) {
 		node->callback = callback;
-		node->childnode->callback = callback;
+		vx_graph graph = (vx_graph)node->ref.scope;
+		CAgoLock lock(graph->cs);
+		if (node->newchildnode) {
+			node->newchildnode->callback = callback;
+		}
 		status = VX_SUCCESS;
 	}
 	return status;
