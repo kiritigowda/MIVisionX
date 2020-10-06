@@ -93,11 +93,16 @@ int agoReleaseContext(AgoContext * acontext)
 
 	if (!agoIsValidContext(acontext))
 		return -1;
-
-	EnterCriticalSection(&acontext->cs);
-	// release all the resources
-	LeaveCriticalSection(&acontext->cs);
-	delete acontext;
+	
+	vx_reference ref = (vx_reference)acontext;
+	ref->external_count = ref->external_count - 1;
+	
+	if(&ref->external_count == 0) {
+		EnterCriticalSection(&acontext->cs);
+		// release all the resources
+		LeaveCriticalSection(&acontext->cs);
+		delete acontext;
+	}
 	return 0;
 }
 
@@ -1401,7 +1406,7 @@ vx_status agoVerifyNode(AgoNode * node)
 					}
 					// re-initialize, if updated
 					if (updated) {
-						char scale[64], desc[64];
+						char scale[256], desc[512];
 						if (data->u.pyr.scale == VX_SCALE_PYRAMID_HALF) sprintf(scale, "HALF");
 						else if (data->u.pyr.scale == VX_SCALE_PYRAMID_ORB) sprintf(scale, "ORB");
 						else sprintf(scale, "%g", data->u.pyr.scale);
