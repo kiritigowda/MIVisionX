@@ -7235,6 +7235,7 @@ int HafCpu_Histogram_DATA_U8
 	vx_uint32     window_size
 )
 {
+	printf(" zero called 000000000000000000\n");
 	__m128i pixels1, pixels2;
 	__m128i * src = (__m128i*)pSrcImage;
 	__m128i * dst = (__m128i*)pDstImage;
@@ -7310,6 +7311,7 @@ int HafCpu_Histogram_DATA_U8
 		unsigned int * srclast = src + (srcWidth >> 2);
 		while (src < srclast)
 		{
+			//printf("src & src last : %d / %d\n", *src, *srclast);
 			// do for 16 pixels..
 			unsigned int pixel4;
 			pixel4 = *src++;
@@ -7339,7 +7341,6 @@ int HafCpu_Histogram_DATA_U8
 	}
 	return AGO_SUCCESS;
 }
-
 
 int HafCpu_HistogramMerge_DATA_DATA
 (

@@ -1582,7 +1582,6 @@ vx_status agoVerifyNode(AgoNode * node)
 			}
 		}
 	}
-
 	return status;
 }
 

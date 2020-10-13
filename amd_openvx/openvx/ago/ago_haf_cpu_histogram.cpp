@@ -531,6 +531,7 @@ int HafCpu_HistogramFixedBins_DATA_U8
 	// compute number of split points in [0..255] range to compute the histogram
 	vx_int32 numSplits = (distBinCount - 1) + ((distOffset > 0) ? 1 : 0) + (((distOffset + distRange) < 256) ? 1 : 0);
 	bool useGeneral = (srcWidth & 7) || (((intptr_t)pSrcImage) & 15);			// Use general code if width is not multiple of 8 or the buffer is unaligned
+	printf("NumSplit: %d, useGeneral: %d, disgBinCount: %d\n", numSplits, useGeneral, distBinCount);
 	if ((numSplits < 1 && distBinCount > 1) || (distBinCount == 0)) return status;
 
 	if (numSplits <= 3 && !useGeneral) {
@@ -597,6 +598,7 @@ int HafCpu_HistogramFixedBins_DATA_U8
 						count += histTmp[j];
 					}
 					dstHist[i] = count;
+					printf("the count value is %d\n", count);
 				}
 			}
 		}

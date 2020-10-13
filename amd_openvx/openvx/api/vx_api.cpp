@@ -4371,8 +4371,10 @@ VX_API_ENTRY vx_status VX_API_CALL vxReleaseDelay(vx_delay *delay)
 {
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (delay && agoIsValidData((AgoData*)*delay, VX_TYPE_DELAY)) {
+		printf("release valid data\n");
 		if (!agoReleaseData((AgoData*)*delay, true)) {
 			*delay = NULL;
+			printf("release valid data done\n");
 			status = VX_SUCCESS;
 		}
 	}
@@ -4401,10 +4403,12 @@ VX_API_ENTRY vx_delay VX_API_CALL vxCreateDelay(vx_context context,
 		data = agoCreateDataFromDescription(context, NULL, desc, true);
 		if (data) {
 			agoGenerateDataName(context, "delay", data->name);
+			printf("the name is %s with %d slots and %d children\n", data->name.c_str(), slots, data->numChildren);
 			agoAddData(&context->dataList, data);
 			// add the children too
 			for (vx_uint32 i = 0; i < data->numChildren; i++) {
 				agoAddData(&context->dataList, data->children[i]);
+				printf("numchildren = %d\n", data->children[i]->numChildren);
 				for (vx_uint32 j = 0; j < data->children[i]->numChildren; j++) {
 					if (data->children[i]->children[j]) {
 						agoAddData(&context->dataList, data->children[i]->children[j]);

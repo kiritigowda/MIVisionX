@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "ago_internal.h"
 #include <math.h>
 #include <sstream>
+#include <iostream>
 
 // global locks
 static vx_bool g_cs_context_initialized = vx_false_e;
@@ -387,6 +388,8 @@ int agoRemoveNode(AgoNodeList * list, AgoNode * item, bool moveToTrash)
 
 int agoRemoveData(AgoDataList * list, AgoData * item, AgoData ** trash)
 {
+	std::cout << "item name is " << item->name << std::endl;
+	std::cout << "current count is " << list->count << std::endl;
 	int status = -1;
 	if (!item) {
 		return status;
@@ -414,6 +417,7 @@ int agoRemoveData(AgoDataList * list, AgoData * item, AgoData ** trash)
 		}
 	}
 	if (status != 0) {
+		printf("item not found\n");
 		// check in trash
 		if (list->trash) {
 			for (AgoData * cur = list->trash; cur && (cur == list->trash || cur->next); cur = cur->next) {
@@ -1041,6 +1045,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		if (data->children) 
 			delete [] data->children;
 		data->numChildren = (vx_uint32)data->u.delay.count;
+		printf("1. numchildren : %d\n", data->numChildren);
 		data->children = new AgoData * [data->numChildren];
 		for (vx_uint32 child = 0; child < data->numChildren; child++) {
 			if ((data->children[child] = agoCreateDataFromDescription(acontext, agraph, desc_child, false)) == NULL) return -1;
@@ -1085,6 +1090,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 			if (data->children) 
 				delete [] data->children;
 			data->numChildren = (vx_uint32)data->u.img.planes;
+			printf("2. numchildren : %d\n", data->numChildren);
 			data->children = new AgoData *[data->numChildren];
 			for (vx_uint32 child = 0; child < data->numChildren; child++) {
 				vx_df_image format;
@@ -1135,6 +1141,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 			if (data->children) 
 				delete [] data->children;
 			data->numChildren = (vx_uint32)data->u.img.planes;
+			printf("3. numchildren : %d\n", data->numChildren);
 			data->children = new AgoData *[data->numChildren];
 			for (vx_uint32 child = 0; child < data->numChildren; child++) {
 				vx_df_image format;
@@ -1233,6 +1240,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		data->u.img.height = data->u.img.rect_roi.end_y - data->u.img.rect_roi.start_y;
 		// create ROI entries for children, if image has multiple planes
 		data->numChildren = dataMaster->numChildren;
+		printf("4. numchildren : %d\n", data->numChildren);
 		if (dataMaster->children) {
 			data->children = new AgoData *[data->numChildren];
 			for (vx_uint32 child = 0; child < data->numChildren; child++) {
@@ -1306,6 +1314,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		if (data->children) 
 			delete [] data->children;
 		data->numChildren = (vx_uint32)data->u.pyr.levels;
+		printf("5. numchildren : %d\n", data->numChildren);
 		data->children = new AgoData *[data->numChildren];
 		for (vx_uint32 level = 0, width = data->u.pyr.width, height = data->u.pyr.height; level < data->u.pyr.levels; level++) {
 			char imgdesc[64];
@@ -1399,6 +1408,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		if (data->children) 
 			delete [] data->children;
 		data->numChildren = (vx_uint32)data->u.objarr.numitems;
+		printf("6. numchildren : %d\n", data->numChildren);
 		data->children = new AgoData * [data->numChildren];
 		for (vx_uint32 child = 0; child < data->numChildren; child++) {
 			if ((data->children[child] = agoCreateDataFromDescription(acontext, agraph, desc_child, false)) == NULL) return -1;
@@ -2828,9 +2838,11 @@ int agoReleaseData(AgoData * data, bool isForExternalUse)
 					// release the children
 					data->children[i]->ref.external_count = 0;
 					data->children[i]->parent = NULL; // NOTE: this is needed to terminate recursion
+					printf("releasing children %d of %d\n", i+1, data->numChildren);
 					if (agoReleaseData(data->children[i], false)) {
+						printf("couldn't release children\n");
 						agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: agoReleaseData: agoReleaseData(context,%s) failed for children[%d]\n", data->children[i]->name.c_str(), i);
-						return -1;
+						//return -1;
 					}
 					data->children[i] = NULL;
 				}
