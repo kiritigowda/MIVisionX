@@ -23,7 +23,6 @@ THE SOFTWARE.
 #include "ago_internal.h"
 #include <math.h>
 #include <sstream>
-#include <iostream>
 
 // global locks
 static vx_bool g_cs_context_initialized = vx_false_e;
@@ -2831,7 +2830,7 @@ int agoReleaseData(AgoData * data, bool isForExternalUse)
 					data->children[i]->parent = NULL; // NOTE: this is needed to terminate recursion
 					if (agoReleaseData(data->children[i], false)) {
 						agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: agoReleaseData: agoReleaseData(context,%s) failed for children[%d]\n", data->children[i]->name.c_str(), i);
-						//return -1;
+						return -1;
 					}
 					data->children[i] = NULL;
 				}
