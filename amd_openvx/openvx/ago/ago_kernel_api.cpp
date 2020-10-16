@@ -18316,13 +18316,11 @@ int agoKernel_Histogram_DATA_U8(AgoNode * node, AgoKernelCommand cmd)
 		vx_uint32 range = (vx_uint32)oDist->u.dist.range;
 		vx_uint32 window = oDist->u.dist.window;
 		vx_uint32 * histOut = (vx_uint32 *)oDist->buffer;
-		printf("ago kernel called\n");
 		if (HafCpu_HistogramFixedBins_DATA_U8(histOut, numbins, offset, range, window, iImg->u.img.width, iImg->u.img.height, iImg->buffer, iImg->u.img.stride_in_bytes)) {
 			status = VX_FAILURE;
 		}
 	}
 	else if (cmd == ago_kernel_cmd_validate) {
-		printf("ago kernel validate called\n");
 		status = ValidateArguments_Img_1IN(node, VX_DF_IMAGE_U8);
 	}
 	else if (cmd == ago_kernel_cmd_initialize || cmd == ago_kernel_cmd_shutdown) {

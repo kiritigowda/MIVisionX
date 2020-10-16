@@ -531,7 +531,6 @@ int HafCpu_HistogramFixedBins_DATA_U8
 	// compute number of split points in [0..255] range to compute the histogram
 	vx_int32 numSplits = (distBinCount - 1) + ((distOffset > 0) ? 1 : 0) + (((distOffset + distRange) < 256) ? 1 : 0);
 	bool useGeneral = (srcWidth & 7) || (((intptr_t)pSrcImage) & 15);			// Use general code if width is not multiple of 8 or the buffer is unaligned
-	printf("NumSplit: %d, useGeneral: %d, disgBinCount: %d\n", numSplits, useGeneral, distBinCount);
 	if ((numSplits < 1 && distBinCount > 1) || (distBinCount == 0)) return status;
 
 	if (numSplits <= 3 && !useGeneral) {
@@ -573,12 +572,14 @@ int HafCpu_HistogramFixedBins_DATA_U8
 			}
 		}
 	}
-	else if (distBinCount == 8 && !useGeneral) {
-		status = HafCpu_Histogram8Bins_DATA_U8(dstHist, distOffset, distWindow, srcWidth, srcHeight, pSrcImage, srcImageStrideInBytes);
-	}
-	else if (distBinCount == 9 && !useGeneral) {
-		status = HafCpu_Histogram9Bins_DATA_U8(dstHist, distOffset, distWindow, srcWidth, srcHeight, pSrcImage, srcImageStrideInBytes);
-	}
+	// else if (distBinCount == 8 && !useGeneral) {
+	// 	printf("distbin 8 method called\n");
+	// 	status = HafCpu_Histogram8Bins_DATA_U8(dstHist, distOffset, distWindow, srcWidth, srcHeight, pSrcImage, srcImageStrideInBytes);
+	// }
+	// else if (distBinCount == 9 && !useGeneral) {
+	// 	printf("distbin 9 method called\n");
+	// 	status = HafCpu_Histogram9Bins_DATA_U8(dstHist, distOffset, distWindow, srcWidth, srcHeight, pSrcImage, srcImageStrideInBytes);
+	// }
 	else if (distBinCount == 16 && numSplits <= 16 && !useGeneral) {
 		status = HafCpu_Histogram16Bins_DATA_U8(dstHist, distOffset, distWindow, srcWidth, srcHeight, pSrcImage, srcImageStrideInBytes);
 	}
@@ -592,13 +593,9 @@ int HafCpu_HistogramFixedBins_DATA_U8
 				memcpy(dstHist, &histTmp[distOffset], distBinCount * sizeof(vx_uint32));
 			}
 			else {
-				for (vx_uint32 i = 0, j = distOffset; i < distBinCount; i++) {
-					vx_uint32 count = 0, end = distOffset + distRange;
-					for (vx_uint32 jend = ((j + distWindow) < end) ? (j + distWindow) : end; j < jend; j++) {
-						count += histTmp[j];
-					}
-					dstHist[i] = count;
-					printf("the count value is %d\n", count);
+				for (vx_uint32 i = distOffset; i < (distOffset + distRange); i++) {
+					vx_size index = (i-distOffset) * distBinCount / distRange;
+					dstHist[index] += histTmp[i];
 				}
 			}
 		}
