@@ -2057,6 +2057,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxCreateImageFromChannel(vx_image img, vx_enum
 	}
 	if (subImage) {
 		subImage->ref.external_count++;
+		subImage->ref.context->num_active_references++;
 	}
 	return (vx_image)subImage;
 }
@@ -8598,6 +8599,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, 
 		// convert the index from 0..-(N-1) to 0..N-1
 		if (index < data->u.objarr.numitems) {
 			item = data->children[index];
+			agoRetainData((AgoGraph *)data->ref.scope, item, true);
 		}
 	}
 	return (vx_reference)item;
