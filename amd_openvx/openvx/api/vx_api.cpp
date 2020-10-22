@@ -4157,10 +4157,20 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryReference(vx_reference ref, vx_enum at
 				break;
 			case VX_REFERENCE_NAME:			
 				if (size == sizeof(vx_char*)) {
-					AgoData * data = (AgoData *)ref;
-					//strncpy((char *)ptr, data->name.c_str(), size);
-					*(vx_char**)ptr = &data->name[0];
-					status = VX_SUCCESS;
+					if(ref->type == VX_TYPE_GRAPH)
+					{
+						AgoGraph * graph = (AgoGraph *)ref;
+						//strncpy((char *)ptr, data->name.c_str(), size);
+						*(vx_char**)ptr = &graph->name[0];
+						status = VX_SUCCESS;
+					}
+					else
+					{
+						AgoData * data = (AgoData *)ref;
+						//strncpy((char *)ptr, data->name.c_str(), size);
+						*(vx_char**)ptr = &data->name[0];
+						status = VX_SUCCESS;
+					}
 				}
 				break;
 			default:
@@ -4298,7 +4308,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetReferenceName(vx_reference ref, const vx
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidReference(ref) && ((ref->type >= VX_TYPE_DELAY && ref->type <= VX_TYPE_REMAP) || 
 		(ref->type == VX_TYPE_TENSOR) ||
-		(ref->type >= VX_TYPE_VENDOR_OBJECT_START && ref->type <= VX_TYPE_VENDOR_OBJECT_END) || (ref->type == VX_TYPE_GRAPH)))
+		(ref->type >= VX_TYPE_VENDOR_OBJECT_START && ref->type <= VX_TYPE_VENDOR_OBJECT_END)))
 	{
 		AgoData * data = (AgoData *)ref;
 		//printf("%s %s %lu\n", data->name.c_str(), name, strlen(name));
@@ -4312,6 +4322,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxSetReferenceName(vx_reference ref, const vx
 		//printf("after:::strlen(data name) = %lu\n", data->name.length());
 		//printf("after == %s\n", data->name.c_str());
 		
+		status = VX_SUCCESS;
+	}
+	else if(agoIsValidReference(ref) && (ref->type == VX_TYPE_GRAPH))
+	{
+		AgoGraph * graph = (AgoGraph *)ref;
+		graph->name = name;
 		status = VX_SUCCESS;
 	}
 	return status;
