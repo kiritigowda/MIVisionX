@@ -4276,6 +4276,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxRetainReference(vx_reference ref)
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidReference(ref)) {
 		ref->external_count++;
+		ref->context->num_active_references++;
 		status = VX_SUCCESS;
 	}
 	return status;
@@ -6995,6 +6996,7 @@ VX_API_ENTRY vx_image VX_API_CALL vxGetPyramidLevel(vx_pyramid pyr, vx_uint32 in
 	if (agoIsValidData(data, VX_TYPE_PYRAMID) && (index < data->u.pyr.levels) && !data->isNotFullyConfigured) {
 		img = data->children[index];
 		agoRetainData((AgoGraph *)data->ref.scope, img, true);
+		data->ref.context->num_active_references++;
 	}
 	return (vx_image)img;
 }
@@ -8616,6 +8618,7 @@ VX_API_ENTRY vx_reference VX_API_CALL vxGetObjectArrayItem(vx_object_array arr, 
 		if (index < data->u.objarr.numitems) {
 			item = data->children[index];
 			agoRetainData((AgoGraph *)data->ref.scope, item, true);
+			data->ref.context->num_active_references++;
 		}
 	}
 	return (vx_reference)item;
