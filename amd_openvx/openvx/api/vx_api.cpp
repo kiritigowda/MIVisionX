@@ -2331,8 +2331,6 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddKernel(vx_context context,
 			kernel->importing_module_index_plus1 = context->importing_module_index_plus1;
 			kernel->user_kernel = vx_false_e;
 			agoAddKernel(&context->kernelList, kernel);
-			// update reference count
-			kernel->ref.context->num_active_references++;
 		}
 	}
 	return kernel;
@@ -2392,8 +2390,6 @@ VX_API_ENTRY vx_kernel VX_API_CALL vxAddUserKernel(vx_context context,
 			kernel->importing_module_index_plus1 = context->importing_module_index_plus1;
 			kernel->user_kernel = vx_true_e;
 			agoAddKernel(&context->kernelList, kernel);
-			// update reference count
-			kernel->ref.context->num_active_references++;
 		}
 	}
 	return kernel;
@@ -4276,7 +4272,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxRetainReference(vx_reference ref)
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
 	if (agoIsValidReference(ref)) {
 		ref->external_count++;
-		ref->context->num_active_references++;
+		if (ref->type != VX_TYPE_KERNEL && ref->type != VX_TYPE_NODE && ref->type != VX_TYPE_PARAMETER)
+			ref->context->num_active_references++;
 		status = VX_SUCCESS;
 	}
 	return status;
