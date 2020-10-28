@@ -3642,6 +3642,7 @@ VX_API_ENTRY vx_status VX_API_CALL vxQueryParameter(vx_parameter param, vx_enum 
 							// TBD: handle optimized buffers and kernels
 							if (ref) {
 								ref->external_count++;
+								ref->context->num_active_references++;
 							}
 							status = VX_SUCCESS;
 						}
