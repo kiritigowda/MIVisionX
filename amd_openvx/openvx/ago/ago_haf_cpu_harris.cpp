@@ -893,6 +893,8 @@ int HafCpu_NonMaxSupp_XY_ANY_3x3
 {
 	vx_uint32 count = 0;
 	const vx_uint8 * pImg = (const vx_uint8 *)pSrcImg;
+	const vx_float32 * p0 = (const vx_float32 *)&pImg[srcStrideInBytes];
+	printf("nonmax supp p0 is %f\n", p0[1]);
 	for (vx_uint32 y = 1; y < srcHeight - 1; y++, pImg += srcStrideInBytes) {
 		if (count >= capacityOfList)
 			break;
@@ -904,6 +906,7 @@ int HafCpu_NonMaxSupp_XY_ANY_3x3
 				p0[1] >= p0[0]                   && p0[1] >  p0[2] &&
 				p0[1] >  p1[0] && p0[1] >  p1[1] && p0[1] >  p1[2])
 			{
+				//printf("p01 %f, p90 %f, p91 %f, p92 %f, p00 %f, p02 %f, p10 %f, p11 %f, p12 %f\n", p0[1], p9[0], p9[1], p9[2], p0[0], p0[2], p1[0], p1[1], p1[2]);
 				dstList->x = x;
 				dstList->y = y;
 				dstList->s = p0[1];
@@ -912,6 +915,9 @@ int HafCpu_NonMaxSupp_XY_ANY_3x3
 				if (count >= capacityOfList)
 					break;
 			}
+			// else {
+			// 	printf("p01 %f, p90 %f, p91 %f, p92 %f, p00 %f, p02 %f, p10 %f, p11 %f, p12 %f\n", p0[1], p9[0], p9[1], p9[2], p0[0], p0[2], p1[0], p1[1], p1[2]);
+			// }
 			p9++;
 			p0++;
 			p1++;
@@ -933,6 +939,7 @@ int HafCpu_HarrisMergeSortAndPick_XY_XYS
 		ago_coord2d_short_t      * gridBuf
 	)
 {
+	printf("merging now...with %d\n", srcListCount);
 	// sort the keypoint XYS list
 	std::sort((vx_int64 *)&srcList[0], (vx_int64 *)&srcList[srcListCount], std::greater<vx_int64>());
 	// extract useful keypoints from XYS list into corners array

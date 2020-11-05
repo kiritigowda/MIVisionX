@@ -14676,6 +14676,7 @@ int agoKernel_FastCorners_XY_U8_NoSupression(AgoNode * node, AgoKernelCommand cm
 
 int agoKernel_HarrisSobel_HG3_U8_3x3(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris sobel 3x3\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -14725,6 +14726,7 @@ int agoKernel_HarrisSobel_HG3_U8_3x3(AgoNode * node, AgoKernelCommand cmd)
 
 int agoKernel_HarrisSobel_HG3_U8_5x5(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris sobel 5x5\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -14774,6 +14776,7 @@ int agoKernel_HarrisSobel_HG3_U8_5x5(AgoNode * node, AgoKernelCommand cmd)
 
 int agoKernel_HarrisSobel_HG3_U8_7x7(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris sobel 7x7\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -14823,6 +14826,7 @@ int agoKernel_HarrisSobel_HG3_U8_7x7(AgoNode * node, AgoKernelCommand cmd)
 
 int agoKernel_HarrisScore_HVC_HG3_3x3(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris score 3x3\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -14873,6 +14877,7 @@ int agoKernel_HarrisScore_HVC_HG3_3x3(AgoNode * node, AgoKernelCommand cmd)
 
 int agoKernel_HarrisScore_HVC_HG3_5x5(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris score 5x5\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -14923,6 +14928,7 @@ int agoKernel_HarrisScore_HVC_HG3_5x5(AgoNode * node, AgoKernelCommand cmd)
 
 int agoKernel_HarrisScore_HVC_HG3_7x7(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris score 7x7\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -15744,6 +15750,7 @@ int agoKernel_NonMaxSupp_XY_ANY_3x3(AgoNode * node, AgoKernelCommand cmd)
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
 		AgoData * oList = node->paramList[0];
+		printf("nonmax supp any with %d %d\n",oList->u.arr.numitems, oList->u.arr.capacity);
 		AgoData * iImg = node->paramList[1];
 		vx_uint32 numitems = 0;
 		if (HafCpu_NonMaxSupp_XY_ANY_3x3((vx_uint32)oList->u.arr.capacity, (ago_keypoint_xys_t *)oList->buffer, &numitems,
@@ -15754,6 +15761,7 @@ int agoKernel_NonMaxSupp_XY_ANY_3x3(AgoNode * node, AgoKernelCommand cmd)
 		else
 		{
 			oList->u.arr.numitems = numitems;
+			printf("nonmax supp any done %d %d\n",oList->u.arr.numitems, oList->u.arr.capacity);
 		}
 	}
 	else if (cmd == ago_kernel_cmd_validate) {
@@ -18023,6 +18031,7 @@ int agoKernel_OpticalFlowFinalLK_XY_XY(AgoNode * node, AgoKernelCommand cmd)
 
 int agoKernel_HarrisMergeSortAndPick_XY_HVC(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris merge1\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -18072,6 +18081,7 @@ int agoKernel_HarrisMergeSortAndPick_XY_HVC(AgoNode * node, AgoKernelCommand cmd
 
 int agoKernel_HarrisMergeSortAndPick_XY_XYS(AgoNode * node, AgoKernelCommand cmd)
 {
+	printf("harris merge2\n");
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
@@ -18082,6 +18092,7 @@ int agoKernel_HarrisMergeSortAndPick_XY_XYS(AgoNode * node, AgoKernelCommand cmd
 		ago_harris_grid_header_t * gridInfo = (ago_harris_grid_header_t *)node->localDataPtr;
 		ago_coord2d_short_t * gridBuf = (ago_coord2d_short_t *)(node->localDataPtr ? &node->localDataPtr[sizeof(ago_harris_grid_header_t)] : nullptr);
 		vx_uint32 cornerCount = 0;
+		printf("merge count is %d\n", iXYS->u.arr.numitems);
 		if (HafCpu_HarrisMergeSortAndPick_XY_XYS((vx_uint32)oXY->u.arr.capacity, (vx_keypoint_t *)oXY->buffer, &cornerCount,
 			(ago_keypoint_xys_t *)iXYS->buffer, (vx_uint32)iXYS->u.arr.numitems, min_distance, gridInfo, gridBuf)) {
 			status = VX_FAILURE;
@@ -18092,6 +18103,7 @@ int agoKernel_HarrisMergeSortAndPick_XY_XYS(AgoNode * node, AgoKernelCommand cmd
 				oNum->u.scalar.u.s = cornerCount;
 			}
 		}
+		printf("the corner count is %d\n", cornerCount);
 	}
 	else if (cmd == ago_kernel_cmd_validate) {
 		// validate parameters
