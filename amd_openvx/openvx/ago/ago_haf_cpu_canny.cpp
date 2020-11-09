@@ -52,7 +52,6 @@ int HafCpu_CannySobel_U16_U8_3x3_L1NORM
 		vx_uint8    * pLocalData
 	)
 {
-	printf("sobel 3x3 l1norm\n");
 	int x, y;
 	int prefixWidth = ((intptr_t)(pDstImage)) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
@@ -154,7 +153,6 @@ int HafCpu_CannySobel_U16_U8_5x5_L1NORM
 		vx_uint8    * pLocalData
 	)
 {
-	printf("sobel 5x5 l1\n");
 	int x, y;
 	int prefixWidth = ((intptr_t)(pDstImage)) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
@@ -167,6 +165,7 @@ int HafCpu_CannySobel_U16_U8_5x5_L1NORM
 	pSrcImage += 2 * srcImageStrideInBytes;
 	vx_int16 *r0 = (vx_int16*)(pLocalData + 16);
 	vx_int16 *r1 = r0 + ((dstWidth + 15) & ~15);
+
 	for (y = 2; y < (int)dstHeight - 2; y++)
 	{
 		const vx_uint8* srow0 = pSrcImage - 2 * srcImageStrideInBytes;
@@ -281,7 +280,6 @@ int HafCpu_CannySobel_U16_U8_7x7_L1NORM
 		vx_uint8    * pLocalData
 	)
 {
-	printf("sobel 7x7 l1 \n");
 	int x, y;
 	int prefixWidth = ((intptr_t)(pDstImage)) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
@@ -297,6 +295,7 @@ int HafCpu_CannySobel_U16_U8_7x7_L1NORM
 	pSrcImage += 3 * srcImageStrideInBytes;
 	vx_int16 *r0 = (vx_int16*)(pLocalData + 16);
 	vx_int16 *r1 = r0 + ((dstWidth + 15) & ~15);
+
 	for (y = 3; y < (int)dstHeight - 3; y++)
 	{
 		const vx_uint8* srow0 = pSrcImage - 3 * srcImageStrideInBytes;
@@ -417,7 +416,6 @@ int HafCpu_CannySobel_U16_U8_7x7_L1NORM
 			vx_int16 tmp = abs(Gx) + abs(Gy);
 			tmp <<= 2;
 			tmp |= (HafCpu_FastAtan2_Canny(Gx, Gy) & 3);
-			//printf(" the tmp value is %d\n ", tmp);
 			drow[x] = tmp;
 		}
 		pSrcImage += srcImageStrideInBytes;
@@ -443,13 +441,13 @@ int HafCpu_CannySobelSuppThreshold_U8XY_U8_3x3_L1NORM
 		vx_uint8			 * pScratch
 	)
 {
-	printf("sobel thresh 3x3\n");
 	vx_int16 *Gx, *Gy;
 	vx_uint8 * pTemp;
 	vx_uint32 dstride = ((dstWidth + 15)&~15);
 	Gx = (vx_int16 *)pScratch;
 	Gy = (vx_int16 *)(pScratch + dstride*sizeof(vx_int16));
 	pTemp = pScratch + 2*dstride*sizeof(vx_int16);
+
 	// compute Sobel gradients
 	HafCpu_Sobel_S16S16_U8_3x3_GXY(dstWidth, dstHeight - 2, Gx + dstride, dstride * 2, Gy + dstride, dstride * 2, pSrcImage + srcImageStrideInBytes, srcImageStrideInBytes, pTemp);
 	
@@ -494,9 +492,7 @@ int HafCpu_CannySobelSuppThreshold_U8XY_U8_3x3_L1NORM
 			int ang = pSrc[0] & 3;
 			int offset0 = n_offset[ang][0][1] * dstride + n_offset[ang][0][0];
 			int offset1 = n_offset[ang][1][1] * dstride + n_offset[ang][1][0];
-			int mag1 = (pSrc[offset0] >> 2);
-			int mag2 = (pSrc[offset1] >> 2);
-			edge = ((mag > mag1) && (mag > mag2)) ? mag : 0;
+			edge = ((mag >(pSrc[offset0] >> 2)) && (mag >(pSrc[offset1] >> 2))) ? mag : 0;
 			if (edge > hyst_upper){
 				pOut[x] = (vx_int8)255;
 				// add the cordinates to stacktop
@@ -569,8 +565,6 @@ int HafCpu_CannySuppThreshold_U8XY_U16_3x3
 	// do minmax suppression: from Gx
 	vx_uint32 sstride = srcStrideInBytes>>1;
 	ago_coord2d_ushort_t *pxyStack = xyStack;
-	printf("sobel 3x3 with %d %d %d\n", hyst_lower, hyst_upper, sstride);
-	//printf("1: %d 2: %d 3: %d 4: %d 5: %d 6: %d 7: %d 8: %d 9: %d\n ", capacityOfXY, *pxyStackTop, dstWidth, dstHeight, *pDst, dstStrideInBytes, *pSrc, srcStrideInBytes, xyStack);
 	for (unsigned int y = 1; y < dstHeight - 1; y++)
 	{
 		vx_uint8* pOut = pDst + y*dstStrideInBytes;
@@ -579,15 +573,11 @@ int HafCpu_CannySuppThreshold_U8XY_U16_3x3
 		{
 			vx_int32 edge;
 			// get the Mag and angle
-			// printf("mag b is %d\n", pLocSrc[0]);
-			// if (pLocSrc[0] == 28593) exit(1);
 			int mag = (pLocSrc[0] >> 2);
 			int ang = pLocSrc[0] & 3;
 			int offset0 = n_offset[ang][0][1] * sstride + n_offset[ang][0][0];
 			int offset1 = n_offset[ang][1][1] * sstride + n_offset[ang][1][0];
-			//printf("sobel 3x3  mag %d \n", mag);
 			edge = ((mag >(pLocSrc[offset0] >> 2)) && (mag >(pLocSrc[offset1] >> 2))) ? mag : 0;
-			//printf("the val is %d\n", edge);
 			if (edge > hyst_upper){
 				pOut[x] = (vx_int8)255;
 				// add the cordinates to stacktop
@@ -617,7 +607,6 @@ int HafCpu_CannyEdgeTrace_U8_U8XY
 		vx_uint32              xyStackTop
 	)
 {
-	printf("canny edge tracing\n");
 	ago_coord2d_ushort_t *pxyStack = xyStack + xyStackTop;
 	while (pxyStack != xyStack){
 			pxyStack--;
@@ -651,7 +640,6 @@ int HafCpu_CannyEdgeTrace_U8_U8XY
 			_mm_store_si128(src++, pixels);
 		}
 		pDstImage += dstImageStrideInBytes;
-		//printf("pdstImage: %d\n", *pDstImage);
 	}
 	return AGO_SUCCESS;
 }
@@ -667,7 +655,6 @@ int HafCpu_CannySobel_U16_U8_3x3_L2NORM
 	vx_uint8    * pLocalData
 )
 {
-	printf("sobel 3x3 l2norm\n");
 	int x, y;
 	int prefixWidth = ((intptr_t)(pDstImage)) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
@@ -778,7 +765,6 @@ int HafCpu_CannySobel_U16_U8_5x5_L2NORM
 	vx_uint8    * pLocalData
 	)
 {
-	printf("sobel 5x5 l2norm\n");
 	int x, y;
 	int prefixWidth = ((intptr_t)(pDstImage)) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
@@ -791,6 +777,7 @@ int HafCpu_CannySobel_U16_U8_5x5_L2NORM
 	pSrcImage += 2 * srcImageStrideInBytes;
 	vx_int16 *r0 = (vx_int16*)(pLocalData + 16);
 	vx_int16 *r1 = r0 + ((dstWidth + 15) & ~15);
+
 	for (y = 2; y < (int)dstHeight - 2; y++)
 	{
 		const vx_uint8* srow0 = pSrcImage - 2 * srcImageStrideInBytes;
@@ -915,7 +902,6 @@ int HafCpu_CannySobel_U16_U8_7x7_L2NORM
 	vx_uint8    * pLocalData
 	)
 {
-	printf("sobel 7x7 l2norm\n");
 	int x, y;
 	int prefixWidth = ((intptr_t)(pDstImage)) & 15;
 	prefixWidth = (prefixWidth == 0) ? 0 : (16 - prefixWidth);
@@ -931,6 +917,7 @@ int HafCpu_CannySobel_U16_U8_7x7_L2NORM
 	pSrcImage += 3 * srcImageStrideInBytes;
 	vx_int16 *r0 = (vx_int16*)(pLocalData + 16);
 	vx_int16 *r1 = r0 + ((dstWidth + 15) & ~15);
+
 	for (y = 3; y < (int)dstHeight - 3; y++)
 	{
 		const vx_uint8* srow0 = pSrcImage - 3 * srcImageStrideInBytes;
@@ -1062,9 +1049,7 @@ int HafCpu_CannySobel_U16_U8_7x7_L2NORM
 			vx_int16 tmp = (vx_int16)sqrt((Gx*Gx) + (Gy*Gy));
 			tmp <<= 2;
 			tmp |= (HafCpu_FastAtan2_Canny(Gx, Gy) & 3);
-			tmp <<= 2;
 			drow[x] = tmp;
-
 		}
 		pSrcImage += srcImageStrideInBytes;
 		pDstImage += dstride;
