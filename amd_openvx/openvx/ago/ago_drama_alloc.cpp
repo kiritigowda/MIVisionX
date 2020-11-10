@@ -783,7 +783,6 @@ int agoOptimizeDramaAlloc(AgoGraph * agraph)
 			return -1;
 		}
 	}
-
 	// compute image valid rectangles
 	if (agoPrepareImageValidRectangleBuffers(agraph)) {
 		return -1;
@@ -791,12 +790,10 @@ int agoOptimizeDramaAlloc(AgoGraph * agraph)
 	if (agoComputeImageValidRectangleOutputs(agraph)) {
 		return -1;
 	}
-
 	// set default target assignments
 	if (agoOptimizeDramaAllocSetDefaultTargets(agraph) < 0) {
 		return -1;
 	}
-
 #if ENABLE_OPENCL
 	if (!(agraph->optimizer_flags & AGO_GRAPH_OPTIMIZER_FLAG_NO_SUPERNODE_MERGE)) {
 		// merge super nodes
@@ -810,7 +807,6 @@ int agoOptimizeDramaAlloc(AgoGraph * agraph)
 		return -1;
 	}
 #endif
-
 	// remove unused data
 	if (agoOptimizeDramaAllocRemoveUnusedData(agraph)) return -1;
 

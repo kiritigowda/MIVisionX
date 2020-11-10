@@ -2053,6 +2053,7 @@ int agoGpuOclSuperNodeFinalize(AgoGraph * graph, AgoSuperNode * supernode)
 	std::string opencl_build_options = graph->ref.context->opencl_build_options;
 	err = clBuildProgram(supernode->opencl_program, 1, &graph->opencl_device, opencl_build_options.c_str(), NULL, NULL);
 	if (err) { 
+		printf("ERROR: clBuildProgram(%p,%s) failed(%d) for group# %d\n", supernode->opencl_program, graph->ref.context->opencl_build_options, err, supernode->group);
 		agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: clBuildProgram(%p,%s) failed(%d) for group#%d\n", supernode->opencl_program, graph->ref.context->opencl_build_options, err, supernode->group);
 #if _DEBUG // dump warnings/errors to console in debug build mode
 		size_t logSize = 1024 * 1024; char * log = new char[logSize]; memset(log, 0, logSize);
@@ -2203,6 +2204,7 @@ int agoGpuOclSingleNodeFinalize(AgoGraph * graph, AgoNode * node)
 	}
 	err = clBuildProgram(node->opencl_program, 1, &graph->opencl_device, node->opencl_build_options.c_str(), NULL, NULL);
 	if (err) {
+		printf("ERROR: clBuildProgram(%p,%s) failed(%d) for %s\n", node->opencl_program, node->opencl_build_options.c_str(), err, node->akernel->name);
 		agoAddLogEntry(&node->ref, VX_FAILURE, "ERROR: clBuildProgram(%p,%s) failed(%d) for %s\n", node->opencl_program, node->opencl_build_options.c_str(), err, node->akernel->name);
 #if _DEBUG // dump warnings/errors to console in debug build mode
 		size_t logSize = 1024 * 1024; char * log = new char[logSize]; memset(log, 0, logSize);

@@ -2718,7 +2718,6 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 		//graph->verified = vx_false_e;
 		graph->isReadyToExecute = vx_false_e;
         graph->state = VX_GRAPH_STATE_UNVERIFIED;
-
 		// check to see if user requested for graph dump
 		vx_uint32 ago_graph_dump = 0;
 		char textBuffer[256];
@@ -2728,12 +2727,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 		if (ago_graph_dump) {
 			agoWriteGraph(graph, NULL, 0, stdout, "*INPUT*");
 		}
-
 		// verify graph per OpenVX specification
 		status = agoVerifyGraph(graph);
 		if (status == VX_SUCCESS) {
 			// run graph optimizer
 			if (agoOptimizeGraph(graph)) {
+				printf("3vxverify graph status %d\n", status);
 				status = VX_FAILURE;
 			}
 			// initialize graph
@@ -2758,6 +2757,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxVerifyGraph(vx_graph graph)
 		graph->verified = vx_true_e;
 	else
 		graph->verified = vx_false_e;
+	
+	printf("4vxverify graph status %d\n", status);
 	return status;
 }
 
