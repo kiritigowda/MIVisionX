@@ -524,7 +524,7 @@ int agoOptimizeDrama(AgoGraph * agraph)
 	if (agoOptimizeDramaCheckArgs(agraph))
 		return -1;
 	if (!(agraph->optimizer_flags & AGO_GRAPH_OPTIMIZER_FLAG_NO_DIVIDE)) { 
-		if(agoOptimizeDramaDivide(agraph))
+		if(agoOptimizeDramaDivide(agraph)) 
 			return -1;
 	}
 #if ENABLE_DEBUG_MESSAGES
@@ -533,6 +533,7 @@ int agoOptimizeDrama(AgoGraph * agraph)
 	if (agoOptimizeDramaComputeGraphHierarchy(agraph))
 		return -1;
 	agoOptimizeDramaSortGraphHierarchy(agraph);
+
 	// perform remove
 	if (agoOptimizeDramaCheckArgs(agraph))
 		return -1;
@@ -544,6 +545,7 @@ int agoOptimizeDrama(AgoGraph * agraph)
 	if (agoOptimizeDramaComputeGraphHierarchy(agraph))
 		return -1;
 	agoOptimizeDramaSortGraphHierarchy(agraph);
+
 	// perform analyze
 	if (agoOptimizeDramaCheckArgs(agraph))
 		return -1;
@@ -552,6 +554,7 @@ int agoOptimizeDrama(AgoGraph * agraph)
 #if ENABLE_DEBUG_MESSAGES
 	agoWriteGraph(agraph, NULL, 0, stdout, "after-analyze");
 #endif
+
 	// perform merge
 	if (agoOptimizeDramaCheckArgs(agraph))
 		return -1;
@@ -560,6 +563,7 @@ int agoOptimizeDrama(AgoGraph * agraph)
 #if ENABLE_DEBUG_MESSAGES
 	agoWriteGraph(agraph, NULL, 0, stdout, "after-merge");
 #endif
+
 	// perform alloc
 	if (agoOptimizeDramaCheckArgs(agraph))
 		return -1;

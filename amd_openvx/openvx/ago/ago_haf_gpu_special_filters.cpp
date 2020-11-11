@@ -796,6 +796,7 @@ int HafGpu_SobelSpecialCases(AgoNode * node)
 int HafGpu_CannySobelFilters(AgoNode * node)
 {
 	int status = VX_SUCCESS;
+
 	// re-use LinearFilter_ANYx2_U8 for computing GX & GY
 	char opencl_name[VX_MAX_KERNEL_NAME];
 	strcpy(opencl_name, node->opencl_name);

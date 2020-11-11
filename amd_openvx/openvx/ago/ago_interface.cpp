@@ -1599,6 +1599,7 @@ int agoVerifyGraph(AgoGraph * graph)
 		return status;
 	}
 	agoOptimizeDramaSortGraphHierarchy(graph);
+
 	// initialize valid region every input image/pyramid to its full region
 	// and reset the user virtul buffer owner
 	for (AgoNode * node = graph->nodeList.head; node; node = node->next) {
@@ -1624,6 +1625,7 @@ int agoVerifyGraph(AgoGraph * graph)
 			return status;
 		}
 	}
+
 	// compute node hierarchy in the graph: this takes care of
 	//    - single writers
 	//    - no loops
@@ -1644,6 +1646,7 @@ int agoVerifyGraph(AgoGraph * graph)
 		graph->enable_node_level_opencl_flush = false;
 	}
 #endif
+
 	return status;
 }
 
@@ -2499,7 +2502,6 @@ int agoProcessGraph(AgoGraph * graph)
 		if (!graph->verified) {
 			status = vxVerifyGraph(graph);
 		}
-		printf("now executing with status %d\n", status);
 		// execute graph if possible
 		if (status == VX_SUCCESS) {
 			if (graph->verified && graph->isReadyToExecute) {
