@@ -1249,12 +1249,12 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 				data->children[child]->u.img.isROI = vx_true_e;
 				data->children[child]->u.img.rect_roi = rect;
 				data->children[child]->parent = data;
-				if (dataMaster->children[child]->u.img.width < dataMaster->u.img.width) {
+				if (dataMaster->children[child]->u.img.width <= dataMaster->u.img.width) {
 					// this is a 2x2 decimated plane of an image: IYUV, NV12, NV21
 					data->children[child]->u.img.rect_roi.start_x = data->u.img.rect_roi.start_x >> 1;
 					data->children[child]->u.img.rect_roi.end_x = data->children[child]->u.img.rect_roi.start_x + ((data->u.img.width + 1) >> 1);
 				}
-				if (dataMaster->children[child]->u.img.height < dataMaster->u.img.height) {
+				if (dataMaster->children[child]->u.img.height <= dataMaster->u.img.height) {
 					// this is a 2x2 decimated plane of an image: IYUV, NV12, NV21
 					data->children[child]->u.img.rect_roi.start_y = data->u.img.rect_roi.start_y >> 1;
 					data->children[child]->u.img.rect_roi.end_y = data->children[child]->u.img.rect_roi.start_y + ((data->u.img.height + 1) >> 1);
@@ -1265,6 +1265,9 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 				data->children[child]->u.img.y_scale_factor_is_2 = (data->children[child]->u.img.height != data->u.img.height) ? 1 : 0;
 				data->children[child]->u.img.stride_in_bytes = dataMaster->children[child]->u.img.stride_in_bytes;
 				data->children[child]->opencl_buffer_offset = dataMaster->children[child]->opencl_buffer_offset +
+					data->children[child]->u.img.rect_roi.start_y * data->children[child]->u.img.stride_in_bytes +
+					ImageWidthInBytesFloor(data->children[child]->u.img.rect_roi.start_x, data->children[child]);
+				data->children[child]->buffer = dataMaster->children[child]->buffer +
 					data->children[child]->u.img.rect_roi.start_y * data->children[child]->u.img.stride_in_bytes +
 					ImageWidthInBytesFloor(data->children[child]->u.img.rect_roi.start_x, data->children[child]);
 			}
