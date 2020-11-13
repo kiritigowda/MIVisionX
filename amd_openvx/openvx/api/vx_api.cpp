@@ -1032,8 +1032,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapImageHandle(vx_image image_, void* cons
 					// propagate to ROIs
 					for (auto roi = image->children[i]->roiDepList.begin(); roi != image->children[i]->roiDepList.end(); roi++) {
 						(*roi)->buffer = image->children[i]->buffer +
-							image->children[i]->u.img.rect_roi.start_y * image->children[i]->u.img.stride_in_bytes +
-							ImageWidthInBytesFloor(image->children[i]->u.img.rect_roi.start_x, image->children[i]);
+							(*roi)->children[i]->u.img.rect_roi.start_y * image->children[i]->u.img.stride_in_bytes +
+							ImageWidthInBytesFloor((*roi)->children[i]->u.img.rect_roi.start_x, image->children[i]);
 					}
 					image->children[i]->u.img.mem_handle = (new_ptrs == NULL) ?  vx_true_e : vx_false_e;
 				}
@@ -1048,8 +1048,8 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapImageHandle(vx_image image_, void* cons
 				// propagate to ROIs
 				for (auto roi = image->roiDepList.begin(); roi != image->roiDepList.end(); roi++) {
 					(*roi)->buffer = image->buffer +
-						image->u.img.rect_roi.start_y * image->u.img.stride_in_bytes +
-						ImageWidthInBytesFloor(image->u.img.rect_roi.start_x, image);
+						(*roi)->u.img.rect_roi.start_y * image->u.img.stride_in_bytes +
+						ImageWidthInBytesFloor((*roi)->u.img.rect_roi.start_x, image);
 				}
 				image->u.img.mem_handle = (new_ptrs == NULL) ?  vx_true_e : vx_false_e;
 			}
