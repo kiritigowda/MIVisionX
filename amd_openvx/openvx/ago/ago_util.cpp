@@ -1201,7 +1201,7 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		desc += 10;
 		// get configuration
 		data->ref.type = VX_TYPE_IMAGE;
-		data->u.img.isROI = vx_true_e;
+		//data->u.img.isROI = vx_true_e;
 		const char *s = strstr(desc, ","); if (!s) return -1;
 		char master_name[128];
 		memcpy(master_name, desc, s - desc); master_name[s - desc] = 0;
@@ -1272,6 +1272,9 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 		else if (data->u.img.planes == 1) {
 			data->u.img.stride_in_bytes = dataMaster->u.img.stride_in_bytes;
 			data->opencl_buffer_offset = dataMaster->opencl_buffer_offset +
+				data->u.img.rect_roi.start_y * data->u.img.stride_in_bytes +
+				ImageWidthInBytesFloor(data->u.img.rect_roi.start_x, data);
+			data->buffer = dataMaster->buffer +
 				data->u.img.rect_roi.start_y * data->u.img.stride_in_bytes +
 				ImageWidthInBytesFloor(data->u.img.rect_roi.start_x, data);
 		}

@@ -1013,9 +1013,12 @@ VX_API_ENTRY vx_status VX_API_CALL vxSwapImageHandle(vx_image image_, void* cons
 {
 	AgoData * image = (AgoData *)image_;
 	vx_status status = VX_ERROR_INVALID_REFERENCE;
-	if (agoIsValidData(image, VX_TYPE_IMAGE) && !image->u.img.roiMasterImage) {
+	if (agoIsValidData(image, VX_TYPE_IMAGE)) {
 		CAgoLock lock(image->ref.context->cs);
 		status = VX_ERROR_INVALID_PARAMETERS;
+		if(image->u.img.roiMasterImage) {
+			return status;
+		}		
 		if (image->import_type == VX_MEMORY_TYPE_HOST && num_planes == image->u.img.planes) {
 			status = VX_SUCCESS;
 			if (image->children) {
