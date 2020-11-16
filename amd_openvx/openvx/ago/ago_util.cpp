@@ -1267,17 +1267,11 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 				data->children[child]->opencl_buffer_offset = dataMaster->children[child]->opencl_buffer_offset +
 					data->children[child]->u.img.rect_roi.start_y * data->children[child]->u.img.stride_in_bytes +
 					ImageWidthInBytesFloor(data->children[child]->u.img.rect_roi.start_x, data->children[child]);
-				data->children[child]->buffer = dataMaster->children[child]->buffer +
-					data->children[child]->u.img.rect_roi.start_y * data->children[child]->u.img.stride_in_bytes +
-					ImageWidthInBytesFloor(data->children[child]->u.img.rect_roi.start_x, data->children[child]);
 			}
 		}
 		else if (data->u.img.planes == 1) {
 			data->u.img.stride_in_bytes = dataMaster->u.img.stride_in_bytes;
 			data->opencl_buffer_offset = dataMaster->opencl_buffer_offset +
-				data->u.img.rect_roi.start_y * data->u.img.stride_in_bytes +
-				ImageWidthInBytesFloor(data->u.img.rect_roi.start_x, data);
-			data->buffer = dataMaster->buffer +
 				data->u.img.rect_roi.start_y * data->u.img.stride_in_bytes +
 				ImageWidthInBytesFloor(data->u.img.rect_roi.start_x, data);
 		}
@@ -2554,12 +2548,10 @@ int agoAllocData(AgoData * data)
 			}
 		}
 		else if (data->u.img.isROI) {
-            // make sure that the master image has been allocated
+            // make sure that the master image has been allocated. Shouldn't allocate new memory for image created from handle
 			if (!data->u.img.roiMasterImage->buffer) {
-				if (agoAllocData(data->u.img.roiMasterImage) < 0) {
 					data->u.img.mem_handle = vx_true_e;
 					return -1;
-				}
 			}
 			// get the region from master image
 			data->buffer = data->u.img.roiMasterImage->buffer +
