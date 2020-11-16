@@ -1249,12 +1249,12 @@ int agoGetDataFromDescription(AgoContext * acontext, AgoGraph * agraph, AgoData 
 				data->children[child]->u.img.isROI = vx_true_e;
 				data->children[child]->u.img.rect_roi = rect;
 				data->children[child]->parent = data;
-				if (dataMaster->children[child]->u.img.width <= dataMaster->u.img.width) {
+				if (dataMaster->children[child]->u.img.width < dataMaster->u.img.width) {
 					// this is a 2x2 decimated plane of an image: IYUV, NV12, NV21
 					data->children[child]->u.img.rect_roi.start_x = data->u.img.rect_roi.start_x >> 1;
 					data->children[child]->u.img.rect_roi.end_x = data->children[child]->u.img.rect_roi.start_x + ((data->u.img.width + 1) >> 1);
 				}
-				if (dataMaster->children[child]->u.img.height <= dataMaster->u.img.height) {
+				if (dataMaster->children[child]->u.img.height < dataMaster->u.img.height) {
 					// this is a 2x2 decimated plane of an image: IYUV, NV12, NV21
 					data->children[child]->u.img.rect_roi.start_y = data->u.img.rect_roi.start_y >> 1;
 					data->children[child]->u.img.rect_roi.end_y = data->children[child]->u.img.rect_roi.start_y + ((data->u.img.height + 1) >> 1);
