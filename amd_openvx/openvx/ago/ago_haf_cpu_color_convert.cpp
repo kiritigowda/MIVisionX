@@ -3957,7 +3957,7 @@ int HafCpu_ColorConvert_IYUV_RGBX
 			//tempI = _mm_haddd_epu16(tempI);					// TBD: XOP instruction - not supported on all platforms
 			tempI = _mm_hadd_epi16(tempI, tempI);				// Average horizontally
 			tempI = _mm_cvtepi16_epi32(tempI);
-			row0 = _mm_set1_epi32(1);
+			row0 = _mm_set1_epi32(0);
 			tempI = _mm_add_epi32(tempI, row0);
 			tempI = _mm_srli_epi32(tempI, 1);
 			tempI = _mm_packus_epi32(tempI, tempI);
@@ -4143,10 +4143,10 @@ int HafCpu_ColorConvert_NV12_RGBX
 			temp2 = _mm_mul_ps(temp, weights_toV);
 			V1 = _mm_add_ps(V1, temp2);
 
-			tempI = _mm_cvttps_epi32(Y0);
+			tempI = _mm_cvtps_epi32(Y0);
 			tempI = _mm_packus_epi32(tempI, tempI);
 			tempI = _mm_packus_epi16(tempI, tempI);
-			row1 = _mm_cvttps_epi32(Y1);
+			row1 = _mm_cvtps_epi32(Y1);
 			row1 = _mm_packus_epi32(row1, row1);
 			row1 = _mm_packus_epi16(row1, row1);
 			_mm_store_si128((__m128i *)Ybuf, tempI);
@@ -4154,17 +4154,17 @@ int HafCpu_ColorConvert_NV12_RGBX
 
 			// u00 u01 u02 u03
 			// u10 u11 u12 u13
-			tempI = _mm_cvttps_epi32(U0);
+			tempI = _mm_cvtps_epi32(U0);
 			tempI = _mm_add_epi32(tempI, addToChroma);
 			tempI = _mm_packus_epi32(tempI, tempI);
-			row1 = _mm_cvttps_epi32(U1);
+			row1 = _mm_cvtps_epi32(U1);
 			row1 = _mm_add_epi32(row1, addToChroma);
 			row1 = _mm_packus_epi32(row1, row1);
 			tempI = _mm_avg_epu16(tempI, row1);			// Average u00, u10; u01, u11 ...
 			//tempI = _mm_haddd_epu16(tempI);					// TBD: XOP instruction - not supported on all platforms
 			tempI = _mm_hadd_epi16(tempI, tempI);				// Average horizontally
 			tempI = _mm_cvtepi16_epi32(tempI);
-			row0 = _mm_set1_epi16(1);
+			row0 = _mm_set1_epi16(0);
 			tempI = _mm_add_epi16(tempI, row0);
 			tempI = _mm_srli_epi16(tempI, 1);
 			tempI = _mm_packus_epi32(tempI, tempI);
@@ -4173,10 +4173,10 @@ int HafCpu_ColorConvert_NV12_RGBX
 
 			// v00 v01 v02 v03
 			// v10 v11 v12 v13
-			tempI = _mm_cvttps_epi32(V0);
+			tempI = _mm_cvtps_epi32(V0);
 			tempI = _mm_add_epi32(tempI, addToChroma);
 			tempI = _mm_packus_epi32(tempI, tempI);
-			row1 = _mm_cvttps_epi32(V1);
+			row1 = _mm_cvtps_epi32(V1);
 			row1 = _mm_add_epi32(row1, addToChroma);
 			row1 = _mm_packus_epi32(row1, row1);
 			tempI = _mm_avg_epu16(tempI, row1);			// Average u00, u10; u01, u11 ...
