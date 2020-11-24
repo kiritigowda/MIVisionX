@@ -1823,10 +1823,15 @@ int HafCpu_FormatConvert_IYUV_YUYV
 				temp1 = _mm_or_si128(temp1, pixels1);									// U plane - next row, intermideate bytes 0..7
 				pixels0_NextRow = _mm_or_si128(pixels0_NextRow, pixels1_NextRow);		// V plane - next row, intermideate bytes 0..7
 
-				temp0 = _mm_avg_epu8(temp0, temp1);										// U plane, bytes 0..7
-				*((int64_t *)pLocalDstU) = M128I(temp0).m128i_i64[0];
-				pixels0 = _mm_avg_epu8(pixels0, pixels0_NextRow);						// V plane, bytes 0..7
-				*((int64_t *)pLocalDstV) = M128I(pixels0).m128i_i64[0];
+				__m128i avg0, avg1;
+				avg0 = _mm_avg_epu8(temp0, temp1);										// U plane, bytes 0..7
+				// to fix it up by subtracting 1 if it got rounded up
+				avg0 = _mm_sub_epi8(avg0, _mm_and_si128(_mm_xor_si128(temp0, temp1), _mm_set1_epi8(1)));
+				*((int64_t *)pLocalDstU) = M128I(avg0).m128i_i64[0];
+				avg1 = _mm_avg_epu8(pixels0, pixels0_NextRow);							// V plane, bytes 0..7
+				// to fix it up by subtracting 1 if it got rounded up
+				avg1 = _mm_sub_epi8(avg1, _mm_and_si128(_mm_xor_si128(pixels0, pixels0_NextRow), _mm_set1_epi8(1)));
+				*((int64_t *)pLocalDstV) = M128I(avg1).m128i_i64[0];
 
 				pLocalSrc += 32;
 				pLocalSrcNextRow += 32;
@@ -1910,11 +1915,15 @@ int HafCpu_FormatConvert_IYUV_YUYV
 				temp1 = _mm_or_si128(temp1, pixels1);									// U plane - next row, intermideate bytes 0..7
 				pixels0_NextRow = _mm_or_si128(pixels0_NextRow, pixels1_NextRow);		// V plane - next row, intermideate bytes 0..7
 
-				temp0 = _mm_avg_epu8(temp0, temp1);										// U plane, bytes 0..7
-				_mm_storeu_si128((__m128i *) pLocalDstU, temp0);						// Only lower 8 bytes valid
-				pixels0 = _mm_avg_epu8(pixels0, pixels0_NextRow);						// V plane, bytes 0..7
-				_mm_storeu_si128((__m128i *) pLocalDstV, pixels0);						// Only lower 8 bytes valid
-
+				__m128i avg0, avg1;
+				avg0 = _mm_avg_epu8(temp0, temp1);										// U plane, bytes 0..7
+				// to fix it up by subtracting 1 if it got rounded up
+				avg0 = _mm_sub_epi8(avg0, _mm_and_si128(_mm_xor_si128(temp0, temp1), _mm_set1_epi8(1)));
+				_mm_storeu_si128((__m128i *) pLocalDstU, avg0);						// Only lower 8 bytes valid
+				avg1 = _mm_avg_epu8(pixels0, pixels0_NextRow);							// V plane, bytes 0..7
+				// to fix it up by subtracting 1 if it got rounded up
+				avg1 = _mm_sub_epi8(avg1, _mm_and_si128(_mm_xor_si128(pixels0, pixels0_NextRow), _mm_set1_epi8(1)));
+				_mm_storeu_si128((__m128i *) pLocalDstV, avg1);						// Only lower 8 bytes valid
 
 				pLocalSrc += 32;
 				pLocalSrcNextRow += 32;
@@ -2209,8 +2218,11 @@ int HafCpu_FormatConvert_NV12_YUYV
 				pixels1_NextRow = _mm_slli_si128(pixels1_NextRow, 8);
 				pixels0 = _mm_or_si128(pixels0, pixels1);
 				pixels0_NextRow = _mm_or_si128(pixels0_NextRow, pixels1_NextRow);
-				pixels0 = _mm_avg_epu8(pixels0, pixels0_NextRow);
-				_mm_store_si128((__m128i *) pLocalDstChroma, pixels0);
+				__m128i avg;
+				avg = _mm_avg_epu8(pixels0, pixels0_NextRow);
+				// to fix it up by subtracting 1 if it got rounded up
+				avg = _mm_sub_epi8(avg, _mm_and_si128(_mm_xor_si128(pixels0, pixels0_NextRow), _mm_set1_epi8(1)));
+				_mm_store_si128((__m128i *) pLocalDstChroma, avg);
 
 				pLocalSrc += 32;
 				pLocalSrcNextRow += 32;
@@ -2281,8 +2293,11 @@ int HafCpu_FormatConvert_NV12_YUYV
 				pixels1_NextRow = _mm_slli_si128(pixels1_NextRow, 8);
 				pixels0 = _mm_or_si128(pixels0, pixels1);
 				pixels0_NextRow = _mm_or_si128(pixels0_NextRow, pixels1_NextRow);
-				pixels0 = _mm_avg_epu8(pixels0, pixels0_NextRow);
-				_mm_storeu_si128((__m128i *) pLocalDstChroma, pixels0);
+				__m128i avg;
+				avg = _mm_avg_epu8(pixels0, pixels0_NextRow);
+				// to fix it up by subtracting 1 if it got rounded up
+				avg = _mm_sub_epi8(avg, _mm_and_si128(_mm_xor_si128(pixels0, pixels0_NextRow), _mm_set1_epi8(1)));
+				_mm_store_si128((__m128i *) pLocalDstChroma, avg);
 
 				pLocalSrc += 32;
 				pLocalSrcNextRow += 32;
