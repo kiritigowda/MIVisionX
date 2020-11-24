@@ -1382,7 +1382,7 @@ int HafCpu_ColorConvert_RGBX_IYUV
 			pLocalSrcV += 8;
 		}
 
-		for (int width = 0; width < (postfixWidth >> 1); width += 2)		// Processing two pixels at a time in a row
+		for (int width = 0; width < (postfixWidth >> 1); width ++)		// Processing two pixels at a time in a row
 		{
 			float Ypix, Rpix, Gpix, Bpix;
 
@@ -1534,7 +1534,7 @@ int HafCpu_ColorConvert_RGBX_NV12
 			pLocalSrcChroma += 16;
 		}
 
-		for (int width = 0; width < (postfixWidth >> 1); width += 2)		// Processing two pixels at a time in a row
+		for (int width = 0; width < (postfixWidth >> 1); width ++)		// Processing two pixels at a time in a row
 		{
 			float Ypix, Rpix, Gpix, Bpix;
 
@@ -1685,7 +1685,7 @@ int HafCpu_ColorConvert_RGBX_NV21
 			pLocalSrcChroma += 16;
 		}
 
-		for (int width = 0; width < (postfixWidth >> 1); width += 2)		// Processing two pixels at a time in a row
+		for (int width = 0; width < (postfixWidth >> 1); width ++)		// Processing two pixels at a time in a row
 		{
 			float Ypix, Rpix, Gpix, Bpix;
 
