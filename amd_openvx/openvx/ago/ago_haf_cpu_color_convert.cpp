@@ -484,7 +484,7 @@ int HafCpu_ColorConvert_RGB_IYUV
 	)
 {
 	int alignedWidth = dstWidth & ~15;
-	alignedWidth -= 16;
+	alignedWidth = (alignedWidth > 15) ? alignedWidth-16: 0;
 	int postfixWidth = (int)dstWidth - alignedWidth;
 
 	__m128 Y00, Y01, Y10, Y11, U, V;
@@ -634,7 +634,7 @@ int HafCpu_ColorConvert_RGB_NV12
 	)
 {
 	int alignedWidth = dstWidth & ~15;
-	alignedWidth -= 16;
+	alignedWidth = (alignedWidth > 15) ? alignedWidth-16: 0;
 	int postfixWidth = (int)dstWidth - alignedWidth;
 
 	__m128 Y00, Y01, Y10, Y11, U, V;
@@ -779,7 +779,7 @@ int HafCpu_ColorConvert_RGB_NV21
 	)
 {
 	int alignedWidth = dstWidth & ~15;
-	alignedWidth -= 16;
+	alignedWidth = (alignedWidth > 15) ? alignedWidth-16: 0;
 	int postfixWidth = (int)dstWidth - alignedWidth;
 
 	__m128 Y00, Y01, Y10, Y11, U, V;
