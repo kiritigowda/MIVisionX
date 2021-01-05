@@ -1738,7 +1738,7 @@ int agoGpuOclSuperNodeFinalize(AgoGraph * graph, AgoSuperNode * supernode)
 		"	r |= (p1.s1 >> 17) & 128;\n"
 		"	*p0 = r;\n"
 		"}\n"
-		"void Convert_U8_S16 (U8x8 *p0, S16X8 p1)\n"
+		/*"void Convert_U8_S16 (U8x8 *p0, S16x8 p1)\n"
 		"{\n"
 		"  	U8x8 r;\n"
 		"	p1.s0 = (~p1.s0) + 1; \n"
@@ -1756,7 +1756,7 @@ int agoGpuOclSuperNodeFinalize(AgoGraph * graph, AgoSuperNode * supernode)
 		"	q |= (p1.s3) 	   &  0x000000ff;\n"
 		"  	q |= (p1.s3 >> 15) &  0x0000ff00;\n"
 		"  	p0.s1 = q;\n"
-		"}\n"
+		"}\n"*/
 		);
 	for (size_t index = 0; index < supernode->nodeList.size(); index++) {
 		// get node and set node name
