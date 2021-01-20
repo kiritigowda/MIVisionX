@@ -15748,7 +15748,7 @@ int agoKernel_CannySuppThreshold_U8XY_U16_7x7(AgoNode * node, AgoKernelCommand c
 		AgoData * iImg = node->paramList[2];
 		AgoData * iThr = node->paramList[3];
 		
-		// // divide the threshold values by 4 if gradient size = 7
+		// divide the threshold values by 4 if gradient size = 7
 		iThr->u.thr.threshold_lower.U1 /= 4;
 		iThr->u.thr.threshold_upper.U1 /= 4;
 

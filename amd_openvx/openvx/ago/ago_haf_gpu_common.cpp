@@ -72,15 +72,16 @@ int HafGpu_Load_Local(int WGWidth, int WGHeight, int LMWidth, int LMHeight, int 
 	int dGroupsShift = LMdivWGWidthShift - dTypeShift;
 	int dGroups = 1 << dGroupsShift;
 	bool use_vload = ((dTypeShift > 2) && (gxoffset & ((1 << dTypeShift) - 1))) ? true : false;
+
 	// generate code
 	sprintf(item,
 		OPENCL_FORMAT(
-		"  { // load %dx%d bytes into local memory using %dx%d workgroup\n" // LMWidth, LMHeight, WGWidth, WGHeight
-		"    int loffset = ly * %d + (lx << %d);\n" // LMWidth, dTypeShift
+        "  { // load %dx%d bytes into local memory using %dx%d workgroup\n" // LMWidth, LMHeight, WGWidth, WGHeight
+        "    int loffset = ly * %d + (lx << %d);\n" // LMWidth, dTypeShift
         "    int gyoffset = (gy - %d);\n"
         "    gyoffset = gyoffset >= -1 ? gyoffset : -1;\n"
-		"    int goffset = (gyoffset) * gstride + (gx << %d) - %d;\n" // gyoffset, dTypeShift, gxoffset
-		), LMWidth, LMHeight, WGWidth, WGHeight, LMWidth, dTypeShift, gyoffset, dTypeShift, gxoffset);
+        "    int goffset = (gyoffset) * gstride + (gx << %d) - %d;\n" // gyoffset, dTypeShift, gxoffset
+        ), LMWidth, LMHeight, WGWidth, WGHeight, LMWidth, dTypeShift, gyoffset, dTypeShift, gxoffset);
 	code += item;
 	int LMHeightRemain = LMHeight - WGHeight;
 	int LMRemain = (LMWidthRemain * LMHeight + (LMWidth - LMWidthRemain) * LMHeightRemain) >> dTypeShift;
