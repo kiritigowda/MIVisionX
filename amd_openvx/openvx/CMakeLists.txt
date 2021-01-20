@@ -20,9 +20,8 @@
 
 cmake_minimum_required(VERSION 3.0)
 project(openvx)
-
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 11)
-
 if(OPENCL_SUPPORT)
 	find_package(OpenCL QUIET)
 else()
@@ -108,7 +107,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /DVX_API_ENTRY=__declspec(dllexport)")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /DVX_API_ENTRY=__declspec(dllexport)")
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -std=c++11 -s")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -std=c++11")
 	target_link_libraries(openvx dl m)
 endif()
 

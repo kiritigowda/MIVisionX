@@ -72,7 +72,6 @@ int HafGpu_Load_Local(int WGWidth, int WGHeight, int LMWidth, int LMHeight, int 
 	int dGroupsShift = LMdivWGWidthShift - dTypeShift;
 	int dGroups = 1 << dGroupsShift;
 	bool use_vload = ((dTypeShift > 2) && (gxoffset & ((1 << dTypeShift) - 1))) ? true : false;
-    //here1
 	// generate code
 	sprintf(item,
 		OPENCL_FORMAT(
@@ -103,7 +102,6 @@ int HafGpu_Load_Local(int WGWidth, int WGHeight, int LMWidth, int LMHeight, int 
 		int dHeight = LMHeight;
 		int dSize = dWidth * dHeight;
 		int dWidthShift = leftmostbit(dWidth);
-        //here 2
 		if (dWidth != (1 << dWidthShift)) dWidthShift = -1;
 		sprintf(item,
 			OPENCL_FORMAT(
@@ -200,7 +198,6 @@ int HafGpu_Load_Local(int WGWidth, int WGHeight, int LMWidth, int LMHeight, int 
 			int dSize = dWidth * dHeight;
 			int dWidthShift = leftmostbit(dWidth);
 			if (dWidth != (1 << dWidthShift)) dWidthShift = -1;
-            //here3
 			// compute start addresses
 			sprintf(item,
 				"    __local uchar * lbufptr = lbuf + %d;\n" // (WGWidth << LMdivWGWidthShift)
