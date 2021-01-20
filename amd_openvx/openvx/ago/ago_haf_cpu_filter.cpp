@@ -2247,6 +2247,7 @@ int HafCpu_Sobel_S16S16_U8_3x3_GXY
 		vx_uint8	* pScratch
 	)
 {	
+    printf("hafcpu sobel gxy\n");
 	unsigned char *pLocalSrc = (unsigned char *)pSrcImage;
 	short *pLocalDstGx, *pLocalDstGy;
 

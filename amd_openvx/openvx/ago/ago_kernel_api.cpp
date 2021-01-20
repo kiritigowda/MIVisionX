@@ -15149,7 +15149,6 @@ int agoKernel_CannySobelSuppThreshold_U8XY_U8_3x3_L2NORM(AgoNode * node, AgoKern
 		AgoData * iImg = node->paramList[2];
 		AgoData * iThr = node->paramList[3];
 		oStack->u.cannystack.stackTop = 0;
-		printf("cannysobel supp thresh 3x3 l1\n");
 		if (HafCpu_CannySobelSuppThreshold_U8XY_U8_3x3_L2NORM(oStack->u.cannystack.count, (ago_coord2d_ushort_t *)oStack->buffer, &oStack->u.cannystack.stackTop,
 															  oImg->u.img.width, oImg->u.img.height, oImg->buffer, oImg->u.img.stride_in_bytes, 
 															  iImg->buffer, iImg->u.img.stride_in_bytes,
@@ -15185,7 +15184,6 @@ int agoKernel_CannySobelSuppThreshold_U8XY_U8_3x3_L2NORM(AgoNode * node, AgoKern
 int agoKernel_CannySobelSuppThreshold_U8XY_U8_5x5_L1NORM(AgoNode * node, AgoKernelCommand cmd)
 {
 	vx_status status = AGO_ERROR_KERNEL_NOT_IMPLEMENTED;
-	printf("cannysobel supp thresh 5x5 l1\n");
 	if (cmd == ago_kernel_cmd_execute) {
 		status = VX_SUCCESS;
 		AgoData * oImg = node->paramList[0];
@@ -15750,7 +15748,7 @@ int agoKernel_CannySuppThreshold_U8XY_U16_7x7(AgoNode * node, AgoKernelCommand c
 		AgoData * iImg = node->paramList[2];
 		AgoData * iThr = node->paramList[3];
 		
-		// divide the threshold values by 4 if gradient size = 7
+		// // divide the threshold values by 4 if gradient size = 7
 		iThr->u.thr.threshold_lower.U1 /= 4;
 		iThr->u.thr.threshold_upper.U1 /= 4;
 
@@ -15771,7 +15769,6 @@ int agoKernel_CannySuppThreshold_U8XY_U16_7x7(AgoNode * node, AgoKernelCommand c
 	}
 #if ENABLE_OPENCL
 	else if (cmd == ago_kernel_cmd_opencl_codegen) {
-		printf("cannyu supp gpu threshold\n");
 		status = HafGpu_CannySuppThreshold(node);
 	}
 #endif
