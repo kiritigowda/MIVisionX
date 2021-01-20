@@ -76,11 +76,11 @@ int HafGpu_Load_Local(int WGWidth, int WGHeight, int LMWidth, int LMHeight, int 
 	// generate code
 	sprintf(item,
 		OPENCL_FORMAT(
-        "  { // load %dx%d bytes into local memory using %dx%d workgroup\n" // LMWidth, LMHeight, WGWidth, WGHeight
-        "    int loffset = ly * %d + (lx << %d);\n" // LMWidth, dTypeShift
-        "    int gyoffset = (gy - %d);\n"
-        "    gyoffset = gyoffset >= -1 ? gyoffset : -1;\n"
-        "    int goffset = (gyoffset) * gstride + (gx << %d) - %d;\n" // gyoffset, dTypeShift, gxoffset
+		"  { // load %dx%d bytes into local memory using %dx%d workgroup\n" // LMWidth, LMHeight, WGWidth, WGHeight
+		"    int loffset = ly * %d + (lx << %d);\n" // LMWidth, dTypeShift
+		"    int gyoffset = (gy - %d);\n"
+		"    gyoffset = gyoffset >= -1 ? gyoffset : -1;\n"
+		"    int goffset = (gyoffset) * gstride + (gx << %d) - %d;\n" // gyoffset, dTypeShift, gxoffset
         ), LMWidth, LMHeight, WGWidth, WGHeight, LMWidth, dTypeShift, gyoffset, dTypeShift, gxoffset);
 	code += item;
 	int LMHeightRemain = LMHeight - WGHeight;
@@ -117,8 +117,8 @@ int HafGpu_Load_Local(int WGWidth, int WGHeight, int LMWidth, int LMHeight, int 
 			"      int ry = id %s %d;\n" // (id / dWidth) or (id >> dWidthShift)
 			"      int rx = id %s %d;\n" // (id - ry * dWidth) or (id & (dWidth-1))
 			"      loffset = ry * %d + (rx << %d) + %d;\n" // LMWidth, dTypeShift
-            "      int gyoffset2 = (gy - %d - ly + ry);\n"
-            "      gyoffset2 = gyoffset2 >= -1 ? gyoffset2 : -1;\n"
+			"      int gyoffset2 = (gy - %d - ly + ry);\n"
+			"      gyoffset2 = gyoffset2 >= -1 ? gyoffset2 : -1;\n"
 			"      goffset = gyoffset2 * gstride + ((gx - lx + rx) << %d) + %d;\n" // gyoffset, dTypeShift, (WGWidth << LMdivWGWidthShift) - gxoffset
 			"      doExtraLoad = (ry < %d) ? true : false;\n" // LMHeight
 			"    }\n"
