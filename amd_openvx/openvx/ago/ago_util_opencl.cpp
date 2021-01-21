@@ -2157,8 +2157,8 @@ int agoGpuOclSuperNodeWait(AgoGraph * graph, AgoSuperNode * supernode)
 	supernode->opencl_event = NULL;
 	int64_t etime = agoGetClockCounter();
 	graph->opencl_perf.kernel_wait += etime - stime;
-
-    // sync output buffer
+#if ENABLE_DEBUG_DUMP_CL_BUFFERS
+	// dump supernode outputs
 	for (size_t index = 0; index < supernode->dataList.size(); index++) {
 		if (!(supernode->dataInfo[index].data_type_flags & DATA_OPENCL_FLAG_DISCARD_PARAM)) {
 			bool need_access = supernode->dataInfo[index].needed_as_a_kernel_argument;
@@ -2168,34 +2168,16 @@ int agoGpuOclSuperNodeWait(AgoGraph * graph, AgoSuperNode * supernode)
 				if (need_access) { // only use image objects that need write access
 					if (need_write_access) {
 						auto dataToSync = data->u.img.isROI ? data->u.img.roiMasterImage : data;
-						cl_command_queue opencl_cmdq = graph->opencl_cmdq ? graph->opencl_cmdq : graph->ref.context->opencl_cmdq;
-                        if (!(data->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED)) {
-                            if (dataToSync->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_BY_NODE_CL) {
-                                int64_t stime = agoGetClockCounter();
-                                if (dataToSync->opencl_buffer) {
-                                    cl_int err = clEnqueueReadBuffer (opencl_cmdq, dataToSync->opencl_buffer, CL_TRUE, dataToSync->opencl_buffer_offset, dataToSync->size, dataToSync->buffer, 0, NULL, NULL);
-                                    if (err) { 
-                                        agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: clEnqueueReadBuffer() => %d\n", err);
-                                        return -1; 
-                                    }
-                                }
-                                data->buffer_sync_flags |= AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED;
-                                int64_t etime = agoGetClockCounter();
-                                graph->opencl_perf.buffer_read += etime - stime;
-                            }
-                        }
-#if ENABLE_DEBUG_DUMP_CL_BUFFERS
-	                    // dump supernode outputs                        
 						char fileName[128]; sprintf(fileName, "output_%%04d_%dx%d.yuv", dataToSync->u.img.width, dataToSync->u.img.height);
+						cl_command_queue opencl_cmdq = graph->opencl_cmdq ? graph->opencl_cmdq : graph->ref.context->opencl_cmdq;
 						clDumpBuffer(fileName, opencl_cmdq, dataToSync);
 						//printf("Press ENTER to continue... ");  char line[256]; gets(line);
-
-#endif                    
 					}
 				}
 			}
 		}
 	}
+#endif
 	return 0;
 }
 
