@@ -686,35 +686,40 @@ static int agoGpuOclSetKernelArgs(cl_kernel opencl_kernel, vx_uint32& kernelArgI
 			return -1;
 		kernelArgIndex++;
 		err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, sizeof(data->opencl_buffer_offset), &data->opencl_buffer_offset);
-		if (err) { 
+		if (err) {
 			agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,*,cannystack:offset) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, err, group);
 			return -1; 
 		}
 		kernelArgIndex++;
 		// NOTE: count is used when cannystack is output and stacktop is used when cannystack is input
 		err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, sizeof(vx_uint32), &data->u.cannystack.count);
-		if (err) { 
+		if (err) {
 			agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,*,cannystack:count) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, err, group);
 			return -1; 
 		}
 		kernelArgIndex++;
 	}
 	else if (data->ref.type == VX_TYPE_THRESHOLD) {
-		size_t size = sizeof(cl_uint);
-		cl_uint2 value;
 		if (data->u.thr.thresh_type == VX_THRESHOLD_TYPE_BINARY) {
-			size = sizeof(cl_uint2);
-			value.s0 = data->u.thr.threshold_value.U1;
+            cl_uint value;
+			size_t size = sizeof(cl_uint);
+			value = data->u.thr.threshold_value.U1;
+            err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, size, &value);
+            if (err) {
+                agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,%d,threshold) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, (int)size, err, group);
+                return -1;
+            }
 		}
 		else if (data->u.thr.thresh_type == VX_THRESHOLD_TYPE_RANGE) {
-			size = sizeof(cl_uint2);
+            cl_uint2 value;
+			size_t size = sizeof(cl_uint2);
 			value.s0 = data->u.thr.threshold_lower.U1;
 			value.s1 = data->u.thr.threshold_upper.U1;
-		}
-		err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, size, &value);
-		if (err) { 
-			agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,%d,threshold) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, (int)size, err, group);
-			return -1; 
+            err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, size, &value);
+            if (err) {
+                agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,%d,threshold) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, (int)size, err, group);
+                return -1;
+            }
 		}
 		kernelArgIndex++;
 	}
@@ -950,21 +955,26 @@ static int agoGpuOclDataInputSync(AgoGraph * graph, cl_kernel opencl_kernel, vx_
 		}
 	}
 	else if (data->ref.type == VX_TYPE_THRESHOLD) {
-		size_t size = sizeof(cl_uint);
-		cl_uint2 value;
-		if (data->u.thr.thresh_type == VX_THRESHOLD_TYPE_BINARY) {
-			size = sizeof(cl_uint2);
-			value.s0 = data->u.thr.threshold_value.U1;
+        if (data->u.thr.thresh_type == VX_THRESHOLD_TYPE_BINARY) {
+            cl_uint value;
+			size_t size = sizeof(cl_uint);
+			value = data->u.thr.threshold_value.U1;
+            err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, size, &value);
+            if (err) {
+                agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,%d,threshold) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, (int)size, err, group);
+                return -1;
+            }
 		}
 		else if (data->u.thr.thresh_type == VX_THRESHOLD_TYPE_RANGE) {
-			size = sizeof(cl_uint2);
+            cl_uint2 value;
+			size_t size = sizeof(cl_uint2);
 			value.s0 = data->u.thr.threshold_lower.U1;
 			value.s1 = data->u.thr.threshold_upper.U1;
-		}
-		err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, size, &value);
-		if (err) { 
-			agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,%d,threshold) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, (int)size, err, group);
-			return -1; 
+            err = clSetKernelArg(opencl_kernel, (cl_uint)kernelArgIndex, size, &value);
+            if (err) {
+                agoAddLogEntry(&data->ref, VX_FAILURE, "ERROR: clSetKernelArg(supernode,%d,%d,threshold) failed(%d) for group#%d\n", (cl_uint)kernelArgIndex, (int)size, err, group);
+                return -1;
+            }
 		}
 		kernelArgIndex++;
 	}
@@ -2118,7 +2128,7 @@ int agoGpuOclSuperNodeLaunch(AgoGraph * graph, AgoSuperNode * supernode)
 		agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: clFlush(supernode) failed(%d) for group#%d\n", err, supernode->group);
 		return -1; 
 	}
-	int64_t etime = agoGetClockCounter();
+    int64_t etime = agoGetClockCounter();
 	graph->opencl_perf.kernel_enqueue += etime - stime;
 	// mark that supernode outputs are dirty
 	for (size_t index = 0; index < supernode->dataList.size(); index++) {
@@ -2147,8 +2157,8 @@ int agoGpuOclSuperNodeWait(AgoGraph * graph, AgoSuperNode * supernode)
 	supernode->opencl_event = NULL;
 	int64_t etime = agoGetClockCounter();
 	graph->opencl_perf.kernel_wait += etime - stime;
-#if ENABLE_DEBUG_DUMP_CL_BUFFERS
-	// dump supernode outputs
+
+    // sync output buffer
 	for (size_t index = 0; index < supernode->dataList.size(); index++) {
 		if (!(supernode->dataInfo[index].data_type_flags & DATA_OPENCL_FLAG_DISCARD_PARAM)) {
 			bool need_access = supernode->dataInfo[index].needed_as_a_kernel_argument;
@@ -2158,16 +2168,34 @@ int agoGpuOclSuperNodeWait(AgoGraph * graph, AgoSuperNode * supernode)
 				if (need_access) { // only use image objects that need write access
 					if (need_write_access) {
 						auto dataToSync = data->u.img.isROI ? data->u.img.roiMasterImage : data;
-						char fileName[128]; sprintf(fileName, "output_%%04d_%dx%d.yuv", dataToSync->u.img.width, dataToSync->u.img.height);
 						cl_command_queue opencl_cmdq = graph->opencl_cmdq ? graph->opencl_cmdq : graph->ref.context->opencl_cmdq;
+                        if (!(data->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED)) {
+                            if (dataToSync->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_BY_NODE_CL) {
+                                int64_t stime = agoGetClockCounter();
+                                if (dataToSync->opencl_buffer) {
+                                    cl_int err = clEnqueueReadBuffer (opencl_cmdq, dataToSync->opencl_buffer, CL_TRUE, dataToSync->opencl_buffer_offset, dataToSync->size, dataToSync->buffer, 0, NULL, NULL);
+                                    if (err) { 
+                                        agoAddLogEntry(&graph->ref, VX_FAILURE, "ERROR: clEnqueueReadBuffer() => %d\n", err);
+                                        return -1; 
+                                    }
+                                }
+                                data->buffer_sync_flags |= AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED;
+                                int64_t etime = agoGetClockCounter();
+                                graph->opencl_perf.buffer_read += etime - stime;
+                            }
+                        }
+#if ENABLE_DEBUG_DUMP_CL_BUFFERS
+	                    // dump supernode outputs                        
+						char fileName[128]; sprintf(fileName, "output_%%04d_%dx%d.yuv", dataToSync->u.img.width, dataToSync->u.img.height);
 						clDumpBuffer(fileName, opencl_cmdq, dataToSync);
 						//printf("Press ENTER to continue... ");  char line[256]; gets(line);
+
+#endif                    
 					}
 				}
 			}
 		}
 	}
-#endif
 	return 0;
 }
 
