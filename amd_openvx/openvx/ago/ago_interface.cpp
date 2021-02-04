@@ -1922,6 +1922,7 @@ static int agoWaitForNodesCompletion(AgoGraph * graph)
 static int agoDataSyncFromGpuToCpu(AgoGraph * graph, AgoNode * node, AgoData * dataToSync)
 {
 	cl_command_queue opencl_cmdq = graph->opencl_cmdq ? graph->opencl_cmdq : graph->ref.context->opencl_cmdq;
+
 	if (dataToSync->opencl_buffer && !(dataToSync->buffer_sync_flags & AGO_BUFFER_SYNC_FLAG_DIRTY_SYNCHED)) {
 		if (node->flags & AGO_KERNEL_FLAG_DEVICE_GPU) {
 			if (dataToSync->buffer_sync_flags & (AGO_BUFFER_SYNC_FLAG_DIRTY_BY_NODE | AGO_BUFFER_SYNC_FLAG_DIRTY_BY_COMMIT)) {
@@ -2195,7 +2196,6 @@ int agoExecuteGraph(AgoGraph * graph)
 								if (jdata)
 									status = agoDataSyncFromGpuToCpu(graph, node, jdata);
 							}
-
 							if (status) {
 								agoAddLogEntry((vx_reference)graph, VX_FAILURE, "ERROR: agoDataSyncFromGpuToCpu failed (%d:%s) for node(%s) arg#%d data(%s)\n", status, agoEnum2Name(status), node->akernel->name, i, data->name.c_str());
 								return status;
