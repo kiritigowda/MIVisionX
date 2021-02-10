@@ -3952,7 +3952,7 @@ int agoKernel_ThresholdNot_U8_S16_Binary(AgoNode * node, AgoKernelCommand cmd)
 		agoCodeGenOpenCL_Threshold_S16_S16_Binary(node->opencl_code);
 		char textBuffer[2048];
 		sprintf(textBuffer, OPENCL_FORMAT(
-			"void %s (U8x8 * p0, S16x8 p1, int p2)\n"
+			"void %s (U8x8 * p0, S16x8 p1, uint p2)\n"
 			"{\n"
 			"  S16x8 r1;\n"
 			"  Threshold_S16_S16_Binary(&r1, p1, p2);\n"
@@ -4010,7 +4010,7 @@ int agoKernel_ThresholdNot_U8_S16_Range(AgoNode * node, AgoKernelCommand cmd)
 		agoCodeGenOpenCL_Threshold_S16_S16_Range(node->opencl_code);
 		char textBuffer[2048];
 		sprintf(textBuffer, OPENCL_FORMAT(
-			"void %s (U8x8 * p0, S16x8 p1, int2 p2)\n"
+			"void %s (U8x8 * p0, S16x8 p1, uint2 p2)\n"
 			"{\n"
 			"  S16x8 r1;\n"
 			"  Threshold_S16_S16_Range(&r1, p1, p2);\n"
