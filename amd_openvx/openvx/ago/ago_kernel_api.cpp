@@ -2363,6 +2363,7 @@ static void agoCodeGenOpenCL_Threshold_U8_U8_Binary(std::string& opencl_code)
 		"  float4 thr = (float4)amd_unpack0(p2);\n"
 		"  r.s0 = amd_pack((amd_unpack(p1.s0) - thr) * (float4)256.0f);\n"
 		"  r.s1 = amd_pack((amd_unpack(p1.s1) - thr) * (float4)256.0f);\n"
+        //"  printf(\"p1: s0=%hhu s1=%hhu r: s0=%hhu s1=%hhu \\n \", p1.s0,p1.s1, r.s0,r.s1);\n"
 		"  *p0 = r;\n"
 		"}\n"
 		"#endif\n"
@@ -2389,6 +2390,7 @@ static void agoCodeGenOpenCL_Threshold_U8_U8_Range(std::string& opencl_code)
 		"#endif\n"
 		);
 }
+
 static void agoCodeGenOpenCL_Threshold_S16_S16_Binary(std::string& opencl_code)
 {
 	opencl_code += OPENCL_FORMAT(
@@ -2397,12 +2399,25 @@ static void agoCodeGenOpenCL_Threshold_S16_S16_Binary(std::string& opencl_code)
 		"void Threshold_S16_S16_Binary(S16x8 * p0, S16x8 p1, uint p2)\n"
 		"{\n"
 		"  S16x8 r;\n"
+        "  short2 p;\n"
 		"  float4 thr = (float4)amd_unpack0(p2);\n"
-		"  r.s0 = amd_pack((amd_unpack(p1.s0) - thr) * (float4)256.0f);\n"
-		"  r.s1 = amd_pack((amd_unpack(p1.s1) - thr) * (float4)256.0f);\n"
-		"  r.s2 = amd_pack((amd_unpack(p1.s2) - thr) * (float4)256.0f);\n"
-		"  r.s3 = amd_pack((amd_unpack(p1.s3) - thr) * (float4)256.0f);\n"
-		"  *p0 = r;\n"
+        "  p.s0 = ((((int)p1.s0)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s0 >> 16) & 0xffff;\n"
+        "  r.s0 = (p.s0 > thr.s0) ? 0xffff:0;\n"
+        "  r.s0 |= ((p.s1 > thr.s0) ? 0xffff0000:0);\n"
+        "  p.s0 = ((((int)p1.s1)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s1 >> 16) & 0xffff;\n"
+        "  r.s1 = (p.s0 > thr.s0) ? 0xffff:0;\n"
+        "  r.s1 |= ((p.s1 > thr.s0) ? 0xffff0000:0);\n"
+        "  p.s0 = ((((int)p1.s2)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s2 >> 16) & 0xffff;\n"
+        "  r.s2 = (p.s0 > thr.s0) ? 0xffff:0;\n"
+        "  r.s2 |= ((p.s1 > thr.s0) ? 0xffff0000:0);\n"
+        "  p.s0 = ((((int)p1.s3)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s3 >> 16) & 0xffff;\n"
+        "  r.s3 = (p.s0 > thr.s0) ? 0xffff:0;\n"
+        "  r.s3 |= ((p.s1 > thr.s0) ? 0xffff0000:0);\n"
+        "  *p0 = r;\n"
 		"}\n"
 		"#endif\n"
 		);
@@ -2417,7 +2432,25 @@ static void agoCodeGenOpenCL_Threshold_S16_S16_Range(std::string& opencl_code)
 		"  S16x8 r;\n"
 		"  float4 thr0 = (float4)(amd_unpack0(p2.s0) - 1.0f);\n"
 		"  float4 thr1 = (float4)(amd_unpack0(p2.s1) + 1.0f);\n"
-		"  float4 pix0 = amd_unpack(p1.s0);\n"
+        "  short2 p;\n"
+        "  p.s0 = ((((int)p1.s0)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s0 >> 16) & 0xffff;\n"
+        "  r.s0 = (thr1.s0 > p.s0 > thr0.s0) ? 0xffff:0;\n"
+        "  r.s0 |= ((thr1.s0 > p.s1 > thr0.s0) ? 0xffff0000:0);\n"
+        "  p.s0 = ((((int)p1.s1)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s1 >> 16) & 0xffff;\n"
+        "  r.s1 = (thr1.s0 > p.s0 > thr0.s0) ? 0xffff:0;\n"
+        "  r.s1 |= ((thr1.s0 > p.s1 > thr0.s0) ? 0xffff0000:0);\n"
+        "  p.s0 = ((((int)p1.s2)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s2 >> 16) & 0xffff;\n"
+        "  r.s2 = (thr1.s0 > p.s0 > thr0.s0) ? 0xffff:0;\n"
+        "  r.s2 |= ((thr1.s0 > p.s1 > thr0.s0) ? 0xffff0000:0);\n"
+        "  p.s0 = ((((int)p1.s3)  << 16) >> 16) & 0xffff;\n"
+        "  p.s1 = ((int)p1.s3 >> 16) & 0xffff;\n"
+        "  r.s3 = (thr1.s0 > p.s0 > thr0.s0) ? 0xffff:0;\n"
+        "  r.s3 |= ((thr1.s0 > p.s1 > thr0.s0) ? 0xffff0000:0);\n"
+        "   printf(\"p1 s0=%i s1=%i s2=%i s3=%i , thr0.s0 = %f thr1.s0 = %f r s0 = %u s1 = %u s2 = %u r3 = %u\\n\", p1.s0, p1.s1, p1.s2, p1.s3, thr0.s0, thr1.s0, r.s0,r.s1,r.s2,r.s3);\n"
+		/*"  float4 pix0 = amd_unpack(p1.s0);\n"
 		"  float4 pix1 = amd_unpack(p1.s1);\n"
 		"  float4 pix2 = amd_unpack(p1.s2);\n"
 		"  float4 pix3 = amd_unpack(p1.s3);\n"
@@ -2429,6 +2462,7 @@ static void agoCodeGenOpenCL_Threshold_S16_S16_Range(std::string& opencl_code)
 		"  r.s2 &= amd_pack((thr1 - pix2) * (float4)256.0f);\n"
 		"  r.s3  = amd_pack((pix3 - thr0) * (float4)256.0f);\n"
 		"  r.s3 &= amd_pack((thr1 - pix3) * (float4)256.0f);\n"
+        */
 		"  *p0 = r;\n"
 		"}\n"
 		"#endif\n"
@@ -3933,7 +3967,7 @@ int agoKernel_ThresholdNot_U8_S16_Binary(AgoNode * node, AgoKernelCommand cmd)
 		agoCodeGenOpenCL_Threshold_S16_S16_Binary(node->opencl_code);
 		char textBuffer[2048];
 		sprintf(textBuffer, OPENCL_FORMAT(
-			"void %s (U8x8 * p0, S16x8 p1, uint p2)\n"
+			"void %s (U8x8 * p0, S16x8 p1, int p2)\n"
 			"{\n"
 			"  S16x8 r1;\n"
 			"  Threshold_S16_S16_Binary(&r1, p1, p2);\n"
@@ -3991,7 +4025,7 @@ int agoKernel_ThresholdNot_U8_S16_Range(AgoNode * node, AgoKernelCommand cmd)
 		agoCodeGenOpenCL_Threshold_S16_S16_Range(node->opencl_code);
 		char textBuffer[2048];
 		sprintf(textBuffer, OPENCL_FORMAT(
-			"void %s (U8x8 * p0, S16x8 p1, uint2 p2)\n"
+			"void %s (U8x8 * p0, S16x8 p1, int2 p2)\n"
 			"{\n"
 			"  S16x8 r1;\n"
 			"  Threshold_S16_S16_Range(&r1, p1, p2);\n"
