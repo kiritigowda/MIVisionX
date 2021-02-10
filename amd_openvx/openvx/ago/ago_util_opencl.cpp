@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "ago_haf_gpu.h"
 
 #define ENABLE_LOCAL_DEBUG_MESSAGES                       0
-#define ENABLE_DEBUG_DUMP_CL_BUFFERS                      1
+#define ENABLE_DEBUG_DUMP_CL_BUFFERS                      0
 
 #if ENABLE_DEBUG_DUMP_CL_BUFFERS
 static void clDumpBuffer(const char * fileNameFormat, cl_command_queue opencl_cmdq, AgoData * data)
