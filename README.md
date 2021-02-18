@@ -6,6 +6,10 @@
 
 MIVisionX toolkit is a set of comprehensive computer vision and machine intelligence libraries, utilities, and applications bundled into a single toolkit. AMD MIVisionX delivers highly optimized open-source implementation of the <a href="https://www.khronos.org/openvx/" target="_blank">Khronos OpenVX™</a> and OpenVX™ Extensions along with Convolution Neural Net Model Compiler & Optimizer supporting <a href="https://onnx.ai/" target="_blank">ONNX</a>, and <a href="https://www.khronos.org/nnef" target="_blank">Khronos NNEF™</a> exchange formats. The toolkit allows for rapid prototyping and deployment of optimized computer vision and machine learning inference workloads on a wide range of computer hardware, including small embedded x86 CPUs, APUs, discrete GPUs, and heterogeneous servers.
 
+#### Latest Release
+
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/MIVisionX?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/releases)
+
 ## Table of Contents
 
 * [AMD OpenVX](#amd-openvx)
@@ -380,15 +384,11 @@ sudo docker run -it --device=/dev/kfd --device=/dev/dri --cap-add=SYS_RAWIO --de
 * OpenCV - [3.4.0](https://github.com/opencv/opencv/releases/tag/3.4.0)
 * RPP - [0.6](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/0.6)
 * Dependencies for all the above packages
-* MIVisionX Setup Script - `V1.8.6`
+* MIVisionX Setup Script - `V1.8.7`
 
 ### Latest Release
 
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/MIVisionX?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/releases)
-
-### Docker Image
-
-[![Docker Automated build](https://img.shields.io/docker/automated/kiritigowda/ubuntu-18.04?style=for-the-badge)](https://hub.docker.com/repository/docker/kiritigowda/ubuntu-18.04)
 
 **Docker Image:** `docker pull kiritigowda/ubuntu-18.04:{TAGNAME}`
 
