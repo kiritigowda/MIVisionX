@@ -41,6 +41,7 @@ endif(Protobuf_FOUND)
 include_directories(../../amd_openvx/openvx/include
                     ${OpenCL_INCLUDE_DIRS}
                     ${MIOPEN_INCLUDE_DIRS}
+                    ${MIOPENGEMM_INCLUDE_DIRS}
                     src
                     include
 	                ../../utilities/inference_generator
