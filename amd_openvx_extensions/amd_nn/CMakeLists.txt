@@ -89,7 +89,7 @@ list(APPEND SOURCES
     )
 
 add_library(vx_nn SHARED ${SOURCES})
-target_link_libraries(vx_nn openvx MIOpen miopengemm)
+target_link_libraries(vx_nn openvx $(MIOPEN_LIBRARIES) $(MIOPENGEMM_LIBRARIES))
 
 install(TARGETS vx_nn DESTINATION lib)
 install(FILES include/vx_amd_nn.h DESTINATION include)

@@ -86,6 +86,7 @@ endif(GPU_SUPPORT)
 
 if (NEURAL_NET)
     if(GPU_SUPPORT AND OpenCL_FOUND AND BUILD_OPENCL AND miopengemm_FOUND AND miopen_FOUND)
+        message("-- ${Blue}VX_NN using MIOpen -- Libraries:${MIOPEN_LIBRARIES} Includes:${MIOPEN_INCLUDE_DIRS}${ColourReset}")
         add_subdirectory(amd_nn)
         message("-- ${Green}AMD OpenVX Neural Network Extension -- amd_nn module added${ColourReset}")
     elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "CPU")
