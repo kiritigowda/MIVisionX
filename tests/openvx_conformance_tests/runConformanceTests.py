@@ -58,6 +58,7 @@ def write_lines_as_table(header, lines, f):
             f.write("|%s" % field)
         f.write("|\n")
 
+
 # Import arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', 	type=str, default='~/mivisionx-conformance',
@@ -66,7 +67,7 @@ parser.add_argument('--backend_type',       type=str, default='ALL',
                     help='Backend type - optional (default:ALL [options:ALL/HOST/HIP/OCL])')
 args = parser.parse_args()
 setupDir = args.directory
-backendType = args.backend_type
+backendType = args.backend_type.upper()
 
 if backendType not in ('ALL', 'HOST', 'HIP', 'OCL'):
     print("ERROR: OpenVX Backends supported - [ALL or HOST or HIP or OCL]")
@@ -113,7 +114,8 @@ ctsHost = cts_dir+'/conformance_tests/build-cts-host'
 ctsOpenCL = cts_dir+'/conformance_tests/build-cts-opencl'
 ctsHIP = cts_dir+'/conformance_tests/build-cts-hip'
 
-testDataExport = 'export VX_TEST_DATA_PATH='+cts_dir+'/conformance_tests/OpenVX-cts/test_data/'
+testDataExport = 'export VX_TEST_DATA_PATH=' + \
+    cts_dir+'/conformance_tests/OpenVX-cts/test_data/'
 
 # OpenVX Lib Deps
 openvx_host_lib = openvx_ocl_lib = openvx_hip_lib = ''
@@ -139,7 +141,7 @@ board_info = shell('inxi -c0 -M')
 
 vbios = shell('(cd /opt/rocm/bin/; ./rocm-smi -v)')
 
-#rocmInfo = shell('(cd /opt/rocm/bin/; ./rocm-smi -a)')
+# rocmInfo = shell('(cd /opt/rocm/bin/; ./rocm-smi -a)')
 
 rocm_packages = shell('dpkg-query -W | grep rocm')
 rocm_packages = rocm_packages.splitlines()
@@ -186,24 +188,27 @@ with open(reportFilename, 'w') as f:
         f.write("\n")
         write_formatted(vbios, f)
         f.write("\n")
-        #f.write("ROCm Device Info Report\n")
+        # f.write("ROCm Device Info Report\n")
         # f.write("-------------\n")
         # f.write("\n")
-        #write_formatted(rocmInfo, f)
+        # write_formatted(rocmInfo, f)
     f.write("\n\n")
     f.write("OpenVX Shared Library Dependencies\n")
     f.write("-------------\n")
     f.write("\n")
     if backendType in ('ALL', 'HOST'):
-        openvx_host_lib = shell(LDD_Links+' '+openvxHostLib+'/libopenvx'+lib_type)
+        openvx_host_lib = shell(
+            LDD_Links+' '+openvxHostLib+'/libopenvx'+lib_type)
         f.write("* OpenVX HOST Library\n")
         write_formatted(openvx_host_lib, f)
     if backendType in ('ALL', 'OCL'):
-        openvx_ocl_lib = shell(LDD_Links+' '+openvxOpenclLib+'/libopenvx'+lib_type)
+        openvx_ocl_lib = shell(
+            LDD_Links+' '+openvxOpenclLib+'/libopenvx'+lib_type)
         f.write("* OpenVX OpenCL Library\n")
         write_formatted(openvx_ocl_lib, f)
     if backendType in ('ALL', 'HIP'):
-        openvx_hip_lib = shell(LDD_Links+' '+openvxHipLib+'/libopenvx'+lib_type)
+        openvx_hip_lib = shell(
+            LDD_Links+' '+openvxHipLib+'/libopenvx'+lib_type)
         f.write("* OpenVX HIP Library\n")
         write_formatted(openvx_hip_lib, f)
     f.write("\n")
@@ -221,23 +226,23 @@ os.system('(cd '+cts_dir+'/conformance_tests; mkdir -p build-cts-opencl && mkdir
 # Build CTS Host
 if backendType in ('ALL', 'HOST'):
     os.system('(cd '+ctsHost+' && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DOPENVX_INCLUDES='+openvxIncludePath+' -DOPENVX_LIBRARIES='+openvxHostLib +
-            '/libopenvx'+lib_type+'\;'+openvxHostLib+'/libvxu'+lib_type+'\;pthread\;dl\;m\;'+dep_libs+' -DOPENVX_CONFORMANCE_VISION=ON ../OpenVX-cts)')
+        '/libopenvx'+lib_type+'\;'+openvxHostLib+'/libvxu'+lib_type+'\;pthread\;dl\;m\;'+dep_libs+' -DOPENVX_CONFORMANCE_VISION=ON ../OpenVX-cts)')
     os.system('(cd '+ctsHost+' && cmake --build . )')
 # Build CTS OpenCL
 if backendType in ('ALL', 'OCL'):
     os.system('(cd '+ctsOpenCL+' && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DOPENVX_INCLUDES='+openvxIncludePath+' -DOPENVX_LIBRARIES='+openvxOpenclLib +
-            '/libopenvx'+lib_type+'\;'+openvxOpenclLib+'/libvxu'+lib_type+'\;pthread\;dl\;m\;'+dep_libs+' -DOPENVX_CONFORMANCE_VISION=ON ../OpenVX-cts)')
+        '/libopenvx'+lib_type+'\;'+openvxOpenclLib+'/libvxu'+lib_type+'\;pthread\;dl\;m\;'+dep_libs+' -DOPENVX_CONFORMANCE_VISION=ON ../OpenVX-cts)')
     os.system('(cd '+ctsOpenCL+' && cmake --build . )')
 # Build CTS HIP
 if backendType in ('ALL', 'HIP'):
     os.system('(cd '+ctsHIP+' && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DOPENVX_INCLUDES='+openvxIncludePath+' -DOPENVX_LIBRARIES='+openvxHipLib+'/libopenvx'+lib_type+'\;' +
-            openvxHipLib+'/libvxu'+lib_type+'\;'+HIP_deps+'\;pthread\;dl\;m\;'+dep_libs+' -DOPENVX_CONFORMANCE_VISION=ON ../OpenVX-cts)')
+        openvxHipLib+'/libvxu'+lib_type+'\;'+HIP_deps+'\;pthread\;dl\;m\;'+dep_libs+' -DOPENVX_CONFORMANCE_VISION=ON ../OpenVX-cts)')
     os.system('(cd '+ctsHIP+' && cmake --build . )')
 
 # Run Host
 if backendType in ('ALL', 'HOST'):
     os.system('(cd '+ctsHost+' && '+testDataExport +
-            ' && LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-HOST-CTS.md )')
+        ' && LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-HOST-CTS.md )')
     # save conformance logs
     host_data = cts_log_data = ""
     with open(reportFileDir) as fp:
@@ -252,9 +257,9 @@ if backendType in ('ALL', 'HOST'):
 # Run OpenCL
 if backendType in ('ALL', 'OCL'):
     os.system('(cd '+ctsOpenCL+' && '+testDataExport +
-            ' && AGO_DEFAULT_TARGET=CPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-CPU-CTS-OCL.md )')
+        ' && AGO_DEFAULT_TARGET=CPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-CPU-CTS-OCL.md )')
     os.system('(cd '+ctsOpenCL+' && '+testDataExport +
-            ' && AGO_DEFAULT_TARGET=GPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-GPU-CTS-OCL.md )')
+        ' && AGO_DEFAULT_TARGET=GPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-GPU-CTS-OCL.md )')
     # save conformance logs
     ocl_data = cts_log_data = ""
     with open(reportFileDir) as fp:
@@ -269,9 +274,9 @@ if backendType in ('ALL', 'OCL'):
 # Run HIP
 if backendType in ('ALL', 'HIP'):
     os.system('(cd '+ctsHIP+' && '+testDataExport +
-            ' && AGO_DEFAULT_TARGET=CPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-CPU-CTS-HIP.md )')
+        ' && AGO_DEFAULT_TARGET=CPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-CPU-CTS-HIP.md )')
     os.system('(cd '+ctsHIP+' && '+testDataExport +
-            ' && AGO_DEFAULT_TARGET=GPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-GPU-CTS-HIP.md )')
+        ' && AGO_DEFAULT_TARGET=GPU LD_LIBRARY_PATH=./lib ./bin/vx_test_conformance | tee OpenVX-GPU-CTS-HIP.md )')
     # save conformance logs
     hip_data = cts_log_data = ""
     with open(reportFileDir) as fp:
