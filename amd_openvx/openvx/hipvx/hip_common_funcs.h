@@ -29,6 +29,16 @@ THE SOFTWARE.
 #define MASK_EARLY_EXIT 4369
 #define HIPSELECT(a, b, c)  (c ? b : a)
 
+#define CHECK_HIP_RETURN_STATUS(x)                                                                         \
+    do {                                                                                               \
+        int retval = (x);                                                                              \
+        if (retval != 0) {                                                                             \
+            fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+            return VX_FAILURE;                                                                         \
+        }                                                                                              \
+    } while (0)
+#define MAX_KERNELS 500
+
 const float pi = 0x1.921fb6p+1f;
 const float inv_pi = 1 / pi;
 

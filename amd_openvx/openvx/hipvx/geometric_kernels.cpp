@@ -84,10 +84,10 @@ int HipExec_ScaleImage_U8_U8_Nearest(hipStream_t stream, vx_uint32 dstWidth, vx_
     vx_float32 xoffset = (vx_float32)((vx_float64)srcWidth / (vx_float64)dstWidth * 0.5);
     vx_float32 yoffset = (vx_float32)((vx_float64)srcHeight / (vx_float64)dstHeight * 0.5);
 
-    hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        xscale, yscale, xoffset, yoffset);
+                        xscale, yscale, xoffset, yoffset));
 
     return VX_SUCCESS;
 }
@@ -170,10 +170,10 @@ int HipExec_ScaleImage_U8_U8_Bilinear(hipStream_t stream, vx_uint32 dstWidth, vx
     vx_float32 xoffset = (vx_float32)((vx_float64)srcWidth / (vx_float64)dstWidth * 0.5 - 0.5);
     vx_float32 yoffset = (vx_float32)((vx_float64)srcHeight / (vx_float64)dstHeight * 0.5 - 0.5);
 
-    hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        xscale, yscale, xoffset, yoffset);
+                        xscale, yscale, xoffset, yoffset));
 
     return VX_SUCCESS;
 }
@@ -311,10 +311,10 @@ int HipExec_ScaleImage_U8_U8_Bilinear_Replicate(hipStream_t stream, vx_uint32 ds
     vx_float32 xoffset = (vx_float32)((vx_float64)srcWidth / (vx_float64)dstWidth * 0.5 - 0.5);
     vx_float32 yoffset = (vx_float32)((vx_float64)srcHeight / (vx_float64)dstHeight * 0.5 - 0.5);
 
-    hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Bilinear_Replicate, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Bilinear_Replicate, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcWidth, srcHeight,
-                        xscale, yscale, xoffset, yoffset);
+                        xscale, yscale, xoffset, yoffset));
 
     return VX_SUCCESS;
 }
@@ -440,10 +440,10 @@ int HipExec_ScaleImage_U8_U8_Bilinear_Constant(hipStream_t stream, vx_uint32 dst
     vx_float32 xoffset = (vx_float32)((vx_float64)srcWidth / (vx_float64)dstWidth * 0.5 - 0.5);
     vx_float32 yoffset = (vx_float32)((vx_float64)srcHeight / (vx_float64)dstHeight * 0.5 - 0.5);
 
-    hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcWidth, srcHeight,
-                        xscale, yscale, xoffset, yoffset, borderValue);
+                        xscale, yscale, xoffset, yoffset, borderValue));
 
     return VX_SUCCESS;
 }
@@ -740,20 +740,20 @@ int HipExec_ScaleImage_U8_U8_Area(hipStream_t stream, vx_uint32 dstWidth, vx_uin
     }
 
     if (use_sad) {
-        hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Area_Sad, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+        CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Area_Sad, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        Nx, Ny, iSxSy);
+                        Nx, Ny, iSxSy));
     } else if (need_align) {
-        hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Area_Bytealign, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+        CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Area_Bytealign, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        Sx, Sy, factorc, iSxSy);
+                        Sx, Sy, factorc, iSxSy));
     } else {
-        hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Area, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+        CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_ScaleImage_U8_U8_Area, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        Nx, Ny, iSxSy);
+                        Nx, Ny, iSxSy));
     }
 
     return VX_SUCCESS;
@@ -839,10 +839,10 @@ int HipExec_WarpAffine_U8_U8_Nearest(hipStream_t stream, vx_uint32 dstWidth, vx_
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
-                        (d_affine_matrix_t *) affineMatrix);
+                        (d_affine_matrix_t *) affineMatrix));
 
     return VX_SUCCESS;
 }
@@ -987,10 +987,10 @@ int HipExec_WarpAffine_U8_U8_Nearest_Constant(hipStream_t stream, vx_uint32 dstW
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Nearest_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Nearest_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        (d_affine_matrix_t *) affineMatrix, (uint) borderValue, rect_valid);
+                        (d_affine_matrix_t *) affineMatrix, (uint) borderValue, rect_valid));
 
     return VX_SUCCESS;
 }
@@ -1059,7 +1059,7 @@ int HipExec_WarpAffine_U8_U8_Bilinear(hipStream_t stream, vx_uint32 dstWidth, vx
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
                         (d_affine_matrix_t *) affineMatrix);
@@ -1131,10 +1131,10 @@ int HipExec_WarpAffine_U8_U8_Bilinear_Constant(hipStream_t stream, vx_uint32 dst
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpAffine_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        (d_affine_matrix_t *) affineMatrix, (uint) borderValue);
+                        (d_affine_matrix_t *) affineMatrix, (uint) borderValue));
 
     return VX_SUCCESS;
 }
@@ -1236,10 +1236,10 @@ int HipExec_WarpPerspective_U8_U8_Nearest(hipStream_t stream, vx_uint32 dstWidth
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
-                        (d_perspective_matrix_t *) perspectiveMatrix);
+                        (d_perspective_matrix_t *) perspectiveMatrix));
 
     return VX_SUCCESS;
 }
@@ -1397,10 +1397,10 @@ int HipExec_WarpPerspective_U8_U8_Nearest_Constant(hipStream_t stream, vx_uint32
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Nearest_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Nearest_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         srcWidth, srcHeight, (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        (d_perspective_matrix_t *) perspectiveMatrix, (uint) borderValue);
+                        (d_perspective_matrix_t *) perspectiveMatrix, (uint) borderValue));
 
     return VX_SUCCESS;
 }
@@ -1487,10 +1487,10 @@ int HipExec_WarpPerspective_U8_U8_Bilinear(hipStream_t stream, vx_uint32 dstWidt
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
-                        (d_perspective_matrix_t *) perspectiveMatrix);
+                        (d_perspective_matrix_t *) perspectiveMatrix));
 
     return VX_SUCCESS;
 }
@@ -1577,10 +1577,10 @@ int HipExec_WarpPerspective_U8_U8_Bilinear_Constant(hipStream_t stream, vx_uint3
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_WarpPerspective_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
                         srcWidth, srcHeight, (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        (d_perspective_matrix_t *) perspectiveMatrixLoc, (uint) borderValue);
+                        (d_perspective_matrix_t *) perspectiveMatrixLoc, (uint) borderValue));
 
     return VX_SUCCESS;
 }
@@ -1684,10 +1684,10 @@ int HipExec_Remap_U8_U8_Nearest(hipStream_t stream, vx_uint32 dstWidth, vx_uint3
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Remap_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Remap_U8_U8_Nearest, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage, dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
-                        (uchar *) remap, remapStrideInBytes);
+                        (uchar *) remap, remapStrideInBytes));
 
     return VX_SUCCESS;
 }
@@ -1829,10 +1829,10 @@ int HipExec_Remap_U8_U8_Nearest_Constant(hipStream_t stream, vx_uint32 dstWidth,
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Remap_U8_U8_Nearest_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Remap_U8_U8_Nearest_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage, dstImageStrideInBytes,
                         srcWidth, srcHeight, (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
-                        (uchar *) remap, remapStrideInBytes, (uint) borderValue);
+                        (uchar *) remap, remapStrideInBytes, (uint) borderValue));
 
     return VX_SUCCESS;
 }
@@ -1889,10 +1889,10 @@ int HipExec_Remap_U8_U8_Bilinear(hipStream_t stream, vx_uint32 dstWidth, vx_uint
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Remap_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Remap_U8_U8_Bilinear, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage, dstImageStrideInBytes,
                         (const uchar *)pHipSrcImage, srcImageStrideInBytes, srcImageBufferSize,
-                        (uchar *) remap, remapStrideInBytes);
+                        (uchar *) remap, remapStrideInBytes));
 
     return VX_SUCCESS;
 }
@@ -1949,10 +1949,10 @@ int HipExec_Remap_U8_U8_Bilinear_Constant(hipStream_t stream, vx_uint32 dstWidth
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Remap_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Remap_U8_U8_Bilinear_Constant, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                         dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage, dstImageStrideInBytes,
                         srcWidth, srcHeight, (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                        (uchar *) remap, remapStrideInBytes, (uint) borderValue);
+                        (uchar *) remap, remapStrideInBytes, (uint) borderValue));
 
     return VX_SUCCESS;
 }

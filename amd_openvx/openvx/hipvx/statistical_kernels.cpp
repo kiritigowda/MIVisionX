@@ -63,10 +63,9 @@ int HipExec_Threshold_U8_U8_Binary(hipStream_t stream, vx_uint32 dstWidth, vx_ui
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Threshold_U8_U8_Binary, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Threshold_U8_U8_Binary, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                        dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
-                       (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                       thresholdValue);
+                       (const uchar *)pHipSrcImage, srcImageStrideInBytes, thresholdValue));
 
     return VX_SUCCESS;
 }
@@ -110,10 +109,9 @@ int HipExec_Threshold_U8_U8_Range(hipStream_t stream, vx_uint32 dstWidth, vx_uin
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Threshold_U8_U8_Range, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS((Hip_Threshold_U8_U8_Range, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                        dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
-                       (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                       thresholdLower, thresholdUpper);
+                       (const uchar *)pHipSrcImage, srcImageStrideInBytes, thresholdLower, thresholdUpper));
 
     return VX_SUCCESS;
 }
@@ -152,10 +150,9 @@ int HipExec_Threshold_U1_U8_Binary(hipStream_t stream, vx_uint32 dstWidth, vx_ui
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Threshold_U1_U8_Binary, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Threshold_U1_U8_Binary, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                        dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
-                       (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                       thresholdValue);
+                       (const uchar *)pHipSrcImage, srcImageStrideInBytes, thresholdValue));
 
     return VX_SUCCESS;
 }
@@ -199,10 +196,9 @@ int HipExec_Threshold_U1_U8_Range(hipStream_t stream, vx_uint32 dstWidth, vx_uin
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Threshold_U1_U8_Range, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Threshold_U1_U8_Range, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                        dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
-                       (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                       thresholdLower, thresholdUpper);
+                       (const uchar *)pHipSrcImage, srcImageStrideInBytes, thresholdLower, thresholdUpper));
 
     return VX_SUCCESS;
 }
@@ -256,10 +252,9 @@ int HipExec_Threshold_U8_S16_Binary(hipStream_t stream, vx_uint32 dstWidth, vx_u
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Threshold_U8_S16_Binary, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Threshold_U8_S16_Binary, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                        dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
-                       (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                       (uint)thresholdValue);
+                       (const uchar *)pHipSrcImage, srcImageStrideInBytes, (uint)thresholdValue));
 
     return VX_SUCCESS;
 }
@@ -314,10 +309,9 @@ int HipExec_Threshold_U8_S16_Range(hipStream_t stream, vx_uint32 dstWidth, vx_ui
     int globalThreads_x = (dstWidth + 7) >> 3;
     int globalThreads_y = dstHeight;
 
-    hipLaunchKernelGGL(Hip_Threshold_U8_S16_Range, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
+    CHECK_HIP_RETURN_STATUS(hipLaunchKernelGGL(Hip_Threshold_U8_S16_Range, dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y)),
                        dim3(localThreads_x, localThreads_y), 0, stream, dstWidth, dstHeight, (uchar *)pHipDstImage , dstImageStrideInBytes,
-                       (const uchar *)pHipSrcImage, srcImageStrideInBytes,
-                       (int)thresholdLower, (int)thresholdUpper);
+                       (const uchar *)pHipSrcImage, srcImageStrideInBytes, (int)thresholdLower, (int)thresholdUpper));
 
     return VX_SUCCESS;
 }
